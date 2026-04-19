@@ -1,5 +1,20 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776598919950,
+      "tag": "0000_married_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776598992798,
+      "tag": "0001_unknown_veda",
+      "breakpoints": true
+    }
+  ]
 }

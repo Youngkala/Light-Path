@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Merriweather:wght@300;400;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -43,74 +44,75 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
+  /* Deep Indigo & Gold Palette - Warm & Faith-Inspired */
+  --primary: oklch(0.3 0.08 260); /* Deep indigo */
+  --primary-foreground: oklch(0.97 0.01 70); /* Soft cream */
+  --sidebar-primary: oklch(0.35 0.08 260); /* Slightly lighter indigo */
+  --sidebar-primary-foreground: oklch(0.97 0.01 70);
+  --chart-1: oklch(0.5 0.12 260); /* Medium indigo */
+  --chart-2: oklch(0.6 0.15 50); /* Warm gold */
+  --chart-3: oklch(0.45 0.1 260); /* Deep indigo */
+  --chart-4: oklch(0.35 0.08 260); /* Very deep indigo */
+  --chart-5: oklch(0.25 0.06 260); /* Almost black indigo */
   --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
+  --background: oklch(0.97 0.01 70); /* Soft cream background */
+  --foreground: oklch(0.25 0.06 260); /* Deep indigo text */
+  --card: oklch(0.99 0.005 70); /* Very light cream */
+  --card-foreground: oklch(0.25 0.06 260); /* Deep indigo text */
+  --popover: oklch(0.99 0.005 70);
+  --popover-foreground: oklch(0.25 0.06 260);
+  --secondary: oklch(0.6 0.15 50); /* Warm gold */
+  --secondary-foreground: oklch(0.25 0.06 260); /* Deep indigo on gold */
+  --muted: oklch(0.55 0.08 260); /* Muted indigo */
+  --muted-foreground: oklch(0.45 0.06 260); /* Muted text */
+  --accent: oklch(0.6 0.15 50); /* Warm gold accent */
+  --accent-foreground: oklch(0.25 0.06 260); /* Deep indigo on gold */
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
+  --border: oklch(0.92 0.01 260); /* Light indigo border */
+  --input: oklch(0.95 0.01 70); /* Light cream input */
+  --ring: oklch(0.6 0.15 50); /* Gold ring focus */
+  --sidebar: oklch(0.97 0.01 70);
+  --sidebar-foreground: oklch(0.25 0.06 260);
+  --sidebar-accent: oklch(0.6 0.15 50);
+  --sidebar-accent-foreground: oklch(0.25 0.06 260);
+  --sidebar-border: oklch(0.92 0.01 260);
+  --sidebar-ring: oklch(0.6 0.15 50);
 }
 
 .dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
+  --primary: oklch(0.35 0.08 260); /* Deep indigo */
+  --primary-foreground: oklch(0.97 0.01 70); /* Soft cream */
+  --sidebar-primary: oklch(0.3 0.07 260); /* Darker indigo */
+  --sidebar-primary-foreground: oklch(0.97 0.01 70);
+  --background: oklch(0.15 0.04 260); /* Very dark indigo */
+  --foreground: oklch(0.95 0.01 70); /* Cream text */
+  --card: oklch(0.2 0.05 260); /* Dark indigo cards */
+  --card-foreground: oklch(0.95 0.01 70); /* Cream text */
+  --popover: oklch(0.2 0.05 260);
+  --popover-foreground: oklch(0.95 0.01 70);
+  --secondary: oklch(0.6 0.15 50); /* Warm gold */
+  --secondary-foreground: oklch(0.25 0.06 260); /* Deep indigo on gold */
+  --muted: oklch(0.35 0.06 260); /* Muted indigo */
+  --muted-foreground: oklch(0.7 0.05 70); /* Muted text */
+  --accent: oklch(0.6 0.15 50); /* Warm gold accent */
+  --accent-foreground: oklch(0.25 0.06 260); /* Deep indigo on gold */
   --destructive: oklch(0.704 0.191 22.216);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  --border: oklch(0.25 0.05 260); /* Dark indigo border */
+  --input: oklch(0.2 0.05 260); /* Dark indigo input */
+  --ring: oklch(0.6 0.15 50); /* Gold ring focus */
+  --chart-1: oklch(0.5 0.12 260);
+  --chart-2: oklch(0.6 0.15 50);
+  --chart-3: oklch(0.45 0.1 260);
+  --chart-4: oklch(0.35 0.08 260);
+  --chart-5: oklch(0.25 0.06 260);
+  --sidebar: oklch(0.2 0.05 260);
+  --sidebar-foreground: oklch(0.95 0.01 70);
+  --sidebar-accent: oklch(0.6 0.15 50);
+  --sidebar-accent-foreground: oklch(0.25 0.06 260);
+  --sidebar-border: oklch(0.25 0.05 260);
+  --sidebar-ring: oklch(0.6 0.15 50);
 }
 
 @layer base {
@@ -119,6 +121,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Merriweather', serif;
+    font-weight: 700;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -136,16 +144,6 @@
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
    */
   .container {
     width: 100%;
@@ -158,6 +156,32 @@
   .flex {
     min-height: 0;
     min-width: 0;
+  }
+
+  /* Spiritual card styling with subtle glow */
+  .spiritual-card {
+    @apply bg-card text-card-foreground rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border border-border;
+  }
+
+  /* Gold accent text for spiritual emphasis */
+  .accent-text {
+    @apply text-accent font-semibold;
+  }
+
+  /* Smooth fade animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.3s ease-out;
   }
 
   @media (min-width: 640px) {

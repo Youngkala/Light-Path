@@ -1,6 +1,9 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
+  devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses 
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +92,146 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Prayer Journal queries
+export async function getUserPrayers(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(prayers).where(eq(prayers.userId, userId)).orderBy(prayers.createdAt);
+}
+
+export async function createPrayer(userId: number, content: string, category: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(prayers).values({ userId, content, category });
+}
+
+export async function updatePrayer(prayerId: number, updates: Partial<InsertPrayer>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(prayers).set(updates).where(eq(prayers.id, prayerId));
+}
+
+export async function deletePrayer(prayerId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(prayers).where(eq(prayers.id, prayerId));
+}
+
+// Habit queries
+export async function getUserHabits(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(habits).where(eq(habits.userId, userId));
+}
+
+export async function createHabit(userId: number, name: string, description?: string, icon?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(habits).values({ userId, name, description, icon });
+}
+
+export async function deleteHabit(habitId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(habits).where(eq(habits.id, habitId));
+}
+
+// Habit Log queries
+export async function logHabitCompletion(habitId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(habitLogs).values({ habitId });
+}
+
+export async function getHabitLogs(habitId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(habitLogs).where(eq(habitLogs.habitId, habitId));
+}
+
+// Devotional queries
+export async function getDevotionals() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(devotionals).orderBy(devotionals.publishedAt);
+}
+
+export async function getDevotionalById(devotionalId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(devotionals).where(eq(devotionals.id, devotionalId));
+  return result[0] || null;
+}
+
+// Devotional Bookmark queries
+export async function getUserBookmarkedDevotionals(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(devotionalBookmarks).where(eq(devotionalBookmarks.userId, userId));
+}
+
+export async function bookmarkDevotional(userId: number, devotionalId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(devotionalBookmarks).values({ userId, devotionalId });
+}
+
+export async function removeBookmark(userId: number, devotionalId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(devotionalBookmarks).where(and(eq(devotionalBookmarks.userId, userId), eq(devotionalBookmarks.devotionalId, devotionalId)));
+}
+
+// Bible Chapter queries
+export async function getUserBibleChapters(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleChapters).where(eq(bibleChapters.userId, userId));
+}
+
+export async function getBibleChapter(userId: number, book: string, chapter: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(bibleChapters)
+    .where(and(eq(bibleChapters.userId, userId), eq(bibleChapters.book, book), eq(bibleChapters.chapter, chapter)));
+  return result[0] || null;
+}
+
+export async function createOrUpdateBibleChapter(userId: number, book: string, chapter: number, isCompleted: boolean, notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await getBibleChapter(userId, book, chapter);
+  if (existing) {
+    return db.update(bibleChapters).set({ isCompleted, notes }).where(eq(bibleChapters.id, existing.id));
+  }
+  return db.insert(bibleChapters).values({ userId, book, chapter, isCompleted, notes });
+}
+
+// AI Chat queries
+export async function saveAIChat(userId: number, userMessage: string, assistantResponse: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(aiChats).values({ userId, userMessage, assistantResponse });
+}
+
+export async function getUserAIChatHistory(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(aiChats).where(eq(aiChats.userId, userId)).orderBy(aiChats.createdAt);
+}
+
+// Daily Verse queries
+export async function getDailyVerse() {
+  const db = await getDb();
+  if (!db) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const result = await db.select().from(dailyVerses).where(eq(dailyVerses.date, today)).limit(1);
+  return result[0] || null;
+}
+
+export async function createDailyVerse(verseReference: string, verseText: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(dailyVerses).values({ verseReference, verseText });
+}

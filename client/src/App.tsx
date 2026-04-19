@@ -5,31 +5,40 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import PrayerJournal from "./pages/PrayerJournal";
+import HabitTracker from "./pages/HabitTracker";
+import Devotionals from "./pages/Devotionals";
+import BibleReadingPlan from "./pages/BibleReadingPlan";
+import SpiritualMentor from "./pages/SpiritualMentor";
+import Settings from "./pages/Settings";
+import About from "./pages/About";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/login"} component={Login} />
+      <Route path={"/dashboard"} component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path={"/prayers"} component={() => <ProtectedRoute><PrayerJournal /></ProtectedRoute>} />
+      <Route path={"/habits"} component={() => <ProtectedRoute><HabitTracker /></ProtectedRoute>} />
+      <Route path={"/devotionals"} component={() => <ProtectedRoute><Devotionals /></ProtectedRoute>} />
+      <Route path={"/bible"} component={() => <ProtectedRoute><BibleReadingPlan /></ProtectedRoute>} />
+      <Route path={"/mentor"} component={() => <ProtectedRoute><SpiritualMentor /></ProtectedRoute>} />
+      <Route path={"/settings"} component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path={"/about"} component={() => <ProtectedRoute><About /></ProtectedRoute>} />
       <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
           <Router />
