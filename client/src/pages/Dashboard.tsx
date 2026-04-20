@@ -23,9 +23,6 @@ export default function Dashboard() {
             <p className="text-sm text-primary-foreground/80">Welcome, {user?.name || "Friend"}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setLocation("/settings")}>
-              <Settings className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="w-4 h-4" />
             </Button>

@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Heart, ArrowLeft, Plus, Trash2, Check } from "lucide-react";
+import { Heart, Plus, Trash2, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export default function PrayerJournal() {
-  const [, setLocation] = useLocation();
+
   const [isCreating, setIsCreating] = useState(false);
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("general");
@@ -61,14 +61,9 @@ export default function PrayerJournal() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground p-4 shadow-md sticky top-0">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <button onClick={() => setLocation("/dashboard")} className="hover:opacity-80">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Prayer Journal</h1>
-            <p className="text-sm text-primary-foreground/80">Record your prayers and track answered prayers</p>
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold">Prayer Journal</h1>
+          <p className="text-sm text-primary-foreground/80">Record your prayers and track answered prayers</p>
         </div>
       </header>
 

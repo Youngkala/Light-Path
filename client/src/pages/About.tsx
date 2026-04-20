@@ -1,18 +1,15 @@
-import { useLocation } from "wouter";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Heart, Code2, Sparkles } from "lucide-react";
+import {  Heart, Code2, Sparkles } from "lucide-react";
 
 export default function About() {
-  const [, setLocation] = useLocation();
+  
 
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground p-4 shadow-md sticky top-0">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <button onClick={() => setLocation("/dashboard")} className="hover:opacity-80">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
           <div>
             <h1 className="text-2xl font-bold">About LightPath</h1>
             <p className="text-sm text-primary-foreground/80">Learn about our mission and team</p>

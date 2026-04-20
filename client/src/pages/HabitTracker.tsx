@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
+import {  Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function HabitTracker() {
-  const [, setLocation] = useLocation();
+  
   const [isCreating, setIsCreating] = useState(false);
   const [habitName, setHabitName] = useState("");
   const [habitDescription, setHabitDescription] = useState("");
@@ -69,9 +69,6 @@ export default function HabitTracker() {
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground p-4 shadow-md sticky top-0">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <button onClick={() => setLocation("/dashboard")} className="hover:opacity-80">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
           <div>
             <h1 className="text-2xl font-bold">Habit Tracker</h1>
             <p className="text-sm text-primary-foreground/80">Build spiritual disciplines and track your progress</p>

@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { useLocation } from "wouter";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Send, Loader2 } from "lucide-react";
+import {  Send, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SpiritualMentor() {
-  const [, setLocation] = useLocation();
+  
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -48,14 +48,9 @@ export default function SpiritualMentor() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="bg-primary text-primary-foreground p-4 shadow-md">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <button onClick={() => setLocation("/dashboard")} className="hover:opacity-80">
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold">Spiritual Mentor</h1>
-            <p className="text-sm text-primary-foreground/80">AI-powered faith guidance grounded in Scripture</p>
-          </div>
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-bold">Spiritual Mentor</h1>
+          <p className="text-sm text-primary-foreground/80">AI-powered faith guidance grounded in Scripture</p>
         </div>
       </header>
 
