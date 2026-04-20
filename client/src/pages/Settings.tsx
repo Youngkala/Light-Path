@@ -1,17 +1,20 @@
 
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
-import {  Bell, Moon, Sun, LogOut } from "lucide-react";
+import { Bell, Moon, Sun, LogOut, Info, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
+  const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
+    setLocation("/");
   };
 
   return (
@@ -23,7 +26,7 @@ export default function Settings() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto p-4">
+      <main className="max-w-4xl mx-auto p-4 pb-24">
         <div className="space-y-6">
           <Card className="p-6 bg-card border-border">
             <h3 className="text-lg font-semibold text-foreground mb-4">Account</h3>
@@ -79,6 +82,21 @@ export default function Settings() {
                 <span className="text-foreground">Habit reminders</span>
               </label>
             </div>
+          </Card>
+
+          <Card className="p-6 bg-card border-border">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Info className="w-5 h-5 text-accent" />
+              About
+            </h3>
+            <Button
+              onClick={() => setLocation("/about-developer")}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 mb-3"
+            >
+              <Info className="w-4 h-4" />
+              About Developer
+            </Button>
           </Card>
 
           <Card className="p-6 bg-card border-border">
