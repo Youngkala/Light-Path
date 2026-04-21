@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean } from "drizzle-orm/mysql-core";
 import { relations } from "drizzle-orm";
 
 /**
@@ -123,10 +123,26 @@ export type BibleChapter = typeof bibleChapters.$inferSelect;
 export type InsertBibleChapter = typeof bibleChapters.$inferInsert;
 
 /**
+ * Chat Sessions - Group conversations into sessions for better organization
+ */
+export const chatSessions = mysqlTable("chatSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 255 }).default("New Chat").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ChatSession = typeof chatSessions.$inferSelect;
+export type InsertChatSession = typeof chatSessions.$inferInsert;
+
+/**
  * AI Chat History - Store conversations with the Spiritual Mentor
  */
 export const aiChats = mysqlTable("aiChats", {
   id: int("id").autoincrement().primaryKey(),
+  sessionId: int("sessionId").notNull(),
   userId: int("userId").notNull(),
   userMessage: text("userMessage").notNull(),
   assistantResponse: text("assistantResponse").notNull(),
@@ -149,3 +165,57 @@ export const dailyVerses = mysqlTable("dailyVerses", {
 
 export type DailyVerse = typeof dailyVerses.$inferSelect;
 export type InsertDailyVerse = typeof dailyVerses.$inferInsert;
+
+/**
+ * Relations for foreign keys
+ */
+export const chatSessionsRelations = relations(chatSessions, ({ many }) => ({
+  messages: many(aiChats),
+}));
+
+export const aiChatsRelations = relations(aiChats, ({ one }) => ({
+  session: one(chatSessions, {
+    fields: [aiChats.sessionId],
+    references: [chatSessions.id],
+  }),
+}));
+
+export const prayersRelations = relations(prayers, ({ one }) => ({
+  user: one(users, {
+    fields: [prayers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const habitsRelations = relations(habits, ({ one, many }) => ({
+  user: one(users, {
+    fields: [habits.userId],
+    references: [users.id],
+  }),
+  logs: many(habitLogs),
+}));
+
+export const habitLogsRelations = relations(habitLogs, ({ one }) => ({
+  habit: one(habits, {
+    fields: [habitLogs.habitId],
+    references: [habits.id],
+  }),
+}));
+
+export const devotionalBookmarksRelations = relations(devotionalBookmarks, ({ one }) => ({
+  user: one(users, {
+    fields: [devotionalBookmarks.userId],
+    references: [users.id],
+  }),
+  devotional: one(devotionals, {
+    fields: [devotionalBookmarks.devotionalId],
+    references: [devotionals.id],
+  }),
+}));
+
+export const bibleChaptersRelations = relations(bibleChapters, ({ one }) => ({
+  user: one(users, {
+    fields: [bibleChapters.userId],
+    references: [users.id],
+  }),
+}));

@@ -15,6 +15,13 @@
       "when": 1776598992798,
       "tag": "0001_unknown_veda",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776761997706,
+      "tag": "0002_curved_nextwave",
+      "breakpoints": true
     }
   ]
 }

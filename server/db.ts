@@ -2,7 +2,8 @@ import { eq, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
-  devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses 
+  devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses,
+  chatSessions
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -207,17 +208,109 @@ export async function createOrUpdateBibleChapter(userId: number, book: string, c
   return db.insert(bibleChapters).values({ userId, book, chapter, isCompleted, notes });
 }
 
-// AI Chat queries
-export async function saveAIChat(userId: number, userMessage: string, assistantResponse: string) {
+// Chat Session queries
+export async function createChatSession(userId: number, title?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(aiChats).values({ userId, userMessage, assistantResponse });
+  await db.insert(chatSessions).values({ userId, title: title || "New Chat" });
+  // Return the newly created session by querying it
+  const sessions = await db.select().from(chatSessions)
+    .where(eq(chatSessions.userId, userId))
+    .orderBy(chatSessions.createdAt)
+    .limit(1);
+  return sessions[0] || { id: 0, userId, title: title || "New Chat", isActive: true, createdAt: new Date(), updatedAt: new Date() };
+}
+
+export async function getUserChatSessions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(chatSessions).where(eq(chatSessions.userId, userId)).orderBy(chatSessions.updatedAt);
+}
+
+export async function getActiveChatSession(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(chatSessions)
+    .where(and(eq(chatSessions.userId, userId), eq(chatSessions.isActive, true)))
+    .orderBy(chatSessions.updatedAt)
+    .limit(1);
+  return result[0] || null;
+}
+
+export async function updateChatSessionTitle(sessionId: number, title: string, userId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // If userId provided, verify ownership
+  if (userId) {
+    const session = await db.select().from(chatSessions)
+      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, userId)))
+      .limit(1);
+    if (!session.length) {
+      throw new Error("Unauthorized: Session not found or does not belong to user");
+    }
+  }
+  
+  return db.update(chatSessions).set({ title }).where(eq(chatSessions.id, sessionId));
+}
+
+// AI Chat queries
+export async function saveAIChat(sessionId: number, userId: number, userMessage: string, assistantResponse: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(aiChats).values({ sessionId, userId, userMessage, assistantResponse });
+}
+
+export async function getSessionMessages(sessionId: number, userId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // If userId provided, verify ownership
+  if (userId) {
+    const session = await db.select().from(chatSessions)
+      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, userId)))
+      .limit(1);
+    if (!session.length) {
+      throw new Error("Unauthorized: Session not found or does not belong to user");
+    }
+  }
+  
+  return db.select().from(aiChats).where(eq(aiChats.sessionId, sessionId)).orderBy(aiChats.createdAt);
 }
 
 export async function getUserAIChatHistory(userId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(aiChats).where(eq(aiChats.userId, userId)).orderBy(aiChats.createdAt);
+}
+
+export async function clearSessionMessages(sessionId: number, userId?: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // If userId provided, verify ownership
+  if (userId) {
+    const session = await db.select().from(chatSessions)
+      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, userId)))
+      .limit(1);
+    if (!session.length) {
+      throw new Error("Unauthorized: Session not found or does not belong to user");
+    }
+  }
+  
+  return db.delete(aiChats).where(eq(aiChats.sessionId, sessionId));
+}
+
+export async function getSessionById(sessionId: number, userId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const conditions = userId 
+    ? and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, userId))
+    : eq(chatSessions.id, sessionId);
+    
+  const result = await db.select().from(chatSessions).where(conditions).limit(1);
+  return result[0] || null;
 }
 
 // Daily Verse queries

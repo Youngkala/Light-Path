@@ -9,7 +9,7 @@ import {
   logHabitCompletion, getHabitLogs,
   getDevotionals, getDevotionalById, getUserBookmarkedDevotionals, bookmarkDevotional, removeBookmark,
   getUserBibleChapters, createOrUpdateBibleChapter,
-  saveAIChat, getUserAIChatHistory,
+  createChatSession, getUserChatSessions, getActiveChatSession, getSessionMessages, saveAIChat, clearSessionMessages, getUserAIChatHistory, getSessionById,
   getDailyVerse
 } from "./db";
 import { invokeLLM } from "./_core/llm";
@@ -141,31 +141,55 @@ export const appRouter = router({
       }),
   }),
 
-  // AI Spiritual Mentor endpoints
+  // AI Spiritual Mentor endpoints with session management
   spiritualMentor: router({
+    createSession: protectedProcedure.mutation(async ({ ctx }) => {
+      const session = await createChatSession(ctx.user.id);
+      return { success: true, sessionId: session.id };
+    }),
+    getSessions: protectedProcedure.query(async ({ ctx }) => {
+      return getUserChatSessions(ctx.user.id);
+    }),
+    getActiveSession: protectedProcedure.query(async ({ ctx }) => {
+      return getActiveChatSession(ctx.user.id);
+    }),
+    getMessages: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getSessionMessages(input.sessionId, ctx.user.id);
+      }),
     chat: protectedProcedure
-      .input(z.object({ message: z.string().min(1) }))
+      .input(z.object({
+        sessionId: z.number(),
+        message: z.string().min(1)
+      }))
       .mutation(async ({ ctx, input }) => {
-        const history = await getUserAIChatHistory(ctx.user.id);
-        const recentHistory = history.slice(-5);
+        const messages = await getSessionMessages(input.sessionId);
+        const recentMessages = messages.slice(-5);
 
         const systemPrompt = `You are LightPath Spiritual Mentor, a compassionate and scripture-grounded AI assistant. Your role is to provide spiritual guidance rooted in Christian faith and Biblical wisdom. Always respond with kindness, compassion, and encouragement. Ground your responses in Scripture when relevant. Suggest Bible verses that relate to the user's concerns. Provide spiritual wisdom and guidance. Be supportive and uplifting. Avoid harmful or inappropriate content. Focus on spiritual growth and faith development.`;
 
-        const messages: any[] = [
+        const messageHistory: any[] = [
           { role: "system", content: systemPrompt },
-          ...recentHistory.map(chat => [
-            { role: "user" as const, content: chat.userMessage },
-            { role: "assistant" as const, content: chat.assistantResponse }
+          ...recentMessages.map(msg => [
+            { role: "user" as const, content: msg.userMessage },
+            { role: "assistant" as const, content: msg.assistantResponse }
           ]).flat(),
           { role: "user", content: input.message }
         ];
 
-        const response = await invokeLLM({ messages });
+        const response = await invokeLLM({ messages: messageHistory });
         const assistantMessage = response.choices?.[0]?.message?.content as string || "I'm here to support your spiritual journey. Please share what's on your heart.";
 
-        await saveAIChat(ctx.user.id, input.message, assistantMessage);
+        await saveAIChat(input.sessionId, ctx.user.id, input.message, assistantMessage);
 
         return { response: assistantMessage };
+      }),
+    clearChat: protectedProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await clearSessionMessages(input.sessionId, ctx.user.id);
+        return { success: true };
       }),
     getHistory: protectedProcedure.query(async ({ ctx }) => {
       return getUserAIChatHistory(ctx.user.id);
