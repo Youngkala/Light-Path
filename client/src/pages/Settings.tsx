@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Bell, Moon, Sun, LogOut, Info, ChevronRight } from "lucide-react";
+import { Bell, Moon, Sun, LogOut, Info, ChevronRight, Heart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
@@ -115,8 +115,8 @@ export default function Settings() {
         </Card>
 
         {/* About Section */}
-        <Card className="p-4 sm:p-6 bg-card border-border">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+        <Card className="p-4 sm:p-6 bg-card border-border space-y-3">
+          <h3 className="text-base sm:text-lg font-semibold text-foreground flex items-center gap-2">
             <Info className="w-5 h-5 text-accent" />
             About
           </h3>
@@ -127,6 +127,16 @@ export default function Settings() {
             <span className="flex items-center gap-2">
               <Info className="w-4 h-4 sm:w-5 sm:h-5" />
               About Developer
+            </span>
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          </Button>
+          <Button
+            onClick={() => setLocation("/dedication")}
+            className="w-full h-11 sm:h-12 flex items-center justify-between gap-2 bg-primary/20 hover:bg-primary/30 text-accent border border-accent/50 font-semibold text-sm sm:text-base transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
+              Dedication
             </span>
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>

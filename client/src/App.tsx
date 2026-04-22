@@ -15,6 +15,7 @@ import SpiritualMentor from "./pages/SpiritualMentor";
 import Settings from "./pages/Settings";
 import About from "./pages/About";
 import AboutDeveloper from "./pages/AboutDeveloper";
+import Dedication from "./pages/Dedication";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BottomNavigation from "./components/BottomNavigation";
 
@@ -34,6 +35,7 @@ function Router() {
           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/about" component={() => <ProtectedRoute><About /></ProtectedRoute>} />
           <Route path="/about-developer" component={() => <ProtectedRoute><AboutDeveloper /></ProtectedRoute>} />
+          <Route path="/dedication" component={() => <ProtectedRoute><Dedication /></ProtectedRoute>} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
