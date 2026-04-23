@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
   devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses,
-  chatSessions
+  chatSessions, feedbacks, InsertFeedback
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -327,4 +327,37 @@ export async function createDailyVerse(verseReference: string, verseText: string
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.insert(dailyVerses).values({ verseReference, verseText });
+}
+
+
+// Feedback queries
+export async function submitFeedback(feedback: InsertFeedback) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(feedbacks).values(feedback);
+}
+
+export async function getFeedback(feedbackId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(feedbacks).where(eq(feedbacks.id, feedbackId)).limit(1);
+  return result[0] || null;
+}
+
+export async function getAllFeedback() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedbacks).orderBy(feedbacks.createdAt);
+}
+
+export async function getUserFeedback(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedbacks).where(eq(feedbacks.userId, userId)).orderBy(feedbacks.createdAt);
+}
+
+export async function getFeedbackByType(feedbackType: "review" | "complaint" | "suggestion" | "bug_report") {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(feedbacks).where(eq(feedbacks.feedbackType, feedbackType)).orderBy(feedbacks.createdAt);
 }

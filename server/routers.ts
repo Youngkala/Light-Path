@@ -10,7 +10,8 @@ import {
   getDevotionals, getDevotionalById, getUserBookmarkedDevotionals, bookmarkDevotional, removeBookmark,
   getUserBibleChapters, createOrUpdateBibleChapter,
   createChatSession, getUserChatSessions, getActiveChatSession, getSessionMessages, saveAIChat, clearSessionMessages, getUserAIChatHistory, getSessionById,
-  getDailyVerse
+  getDailyVerse,
+  submitFeedback, getAllFeedback, getUserFeedback
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 
@@ -222,6 +223,39 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         return { success: true };
       }),
+  }),
+
+  // Feedback endpoints
+  feedback: router({
+    submit: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        email: z.string().email().optional(),
+        feedbackType: z.enum(["review", "complaint", "suggestion", "bug_report"]),
+        rating: z.number().min(1).max(5).optional(),
+        message: z.string().min(1)
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await submitFeedback({
+          userId: ctx.user.id,
+          name: input.name,
+          email: input.email,
+          feedbackType: input.feedbackType,
+          rating: input.rating,
+          message: input.message
+        });
+        return { success: true };
+      }),
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      // Only admin can view all feedback
+      if (ctx.user.role !== "admin") {
+        return [];
+      }
+      return getAllFeedback();
+    }),
+    getUserFeedback: protectedProcedure.query(async ({ ctx }) => {
+      return getUserFeedback(ctx.user.id);
+    }),
   }),
 });
 

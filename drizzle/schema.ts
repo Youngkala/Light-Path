@@ -167,6 +167,23 @@ export type DailyVerse = typeof dailyVerses.$inferSelect;
 export type InsertDailyVerse = typeof dailyVerses.$inferInsert;
 
 /**
+ * User Feedback - Store user reviews, complaints, suggestions, and bug reports
+ */
+export const feedbacks = mysqlTable("feedbacks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }),
+  feedbackType: mysqlEnum("feedbackType", ["review", "complaint", "suggestion", "bug_report"]).notNull(),
+  rating: int("rating"),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertFeedback = typeof feedbacks.$inferInsert;
+
+/**
  * Relations for foreign keys
  */
 export const chatSessionsRelations = relations(chatSessions, ({ many }) => ({

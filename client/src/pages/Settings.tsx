@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Bell, Moon, Sun, LogOut, Info, ChevronRight, Heart } from "lucide-react";
+import { Bell, Moon, Sun, LogOut, Info, ChevronRight, Heart, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
@@ -137,6 +137,16 @@ export default function Settings() {
             <span className="flex items-center gap-2">
               <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
               Dedication
+            </span>
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+          </Button>
+          <Button
+            onClick={() => setLocation("/feedback")}
+            className="w-full h-11 sm:h-12 flex items-center justify-between gap-2 bg-primary/20 hover:bg-primary/30 text-accent border border-accent/50 font-semibold text-sm sm:text-base transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+              Feedback & Reviews
             </span>
             <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
