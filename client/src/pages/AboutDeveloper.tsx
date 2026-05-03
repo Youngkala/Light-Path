@@ -27,8 +27,12 @@ export default function AboutDeveloper() {
         {/* Profile Section */}
         <Card className="p-8 bg-gradient-to-br from-accent/20 to-accent/5 border-accent/50 text-center mb-6">
           <div className="mb-6">
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-accent to-primary mx-auto mb-4 flex items-center justify-center shadow-lg">
-              <Code2 className="w-12 h-12 text-accent-foreground" />
+            <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden shadow-lg border-4 border-accent">
+              <img 
+                src="/manus-storage/IMG_20260126_153728_cea1abf7.jpg" 
+                alt="Kala Maxwell" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <h2 className="text-3xl font-bold text-foreground mb-2">Kala Maxwell</h2>
             <p className="text-lg text-accent font-semibold mb-3">Founder & Lead Developer</p>
