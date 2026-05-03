@@ -14,11 +14,7 @@ export default function Dedication() {
     return () => clearTimeout(timer);
   }, []);
 
-  const spiritualLeaders = [
-    "Apostle R.K Boamah Adjei",
-    "Pastor Elijah Adamu",
-    "Pastor Francis Luguniah",
-  ];
+  const spiritualLeaders = [];
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -86,18 +82,58 @@ export default function Dedication() {
             <h2 className="text-base sm:text-lg font-bold text-foreground">Spiritual Leadership</h2>
           </div>
 
-          <div className="space-y-3 pl-9">
-            {spiritualLeaders.map((leader, index) => (
-              <div
-                key={index}
-                className="group relative"
-              >
-                <div className="absolute -left-6 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-accent/60 group-hover:bg-accent transition-colors"></div>
-                <p className="text-sm sm:text-base text-foreground font-semibold group-hover:text-accent transition-colors">
-                  {leader}
-                </p>
+          {/* Apostle R.K Boamah Adjei */}
+          <div className="mb-6 pb-6 border-b border-border/50">
+            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+              <div className="flex-shrink-0">
+                <img
+                  src="/manus-storage/343281_22b26530.jpg"
+                  alt="Apostle R.K Boamah Adjei"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg object-cover border-2 border-accent/30 shadow-md"
+                />
               </div>
-            ))}
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-sm sm:text-base font-bold text-accent">Apostle R.K Boamah Adjei</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Founder & Spiritual Leader</p>
+                <p className="text-xs sm:text-sm text-foreground/80 mt-2 italic">Leading with faith and vision</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pastor Elijah Adamu */}
+          <div className="mb-6 pb-6 border-b border-border/50">
+            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+              <div className="flex-shrink-0">
+                <img
+                  src="/manus-storage/114883_425ea225.jpg"
+                  alt="Pastor Elijah Adamu"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg object-cover border-2 border-accent/30 shadow-md"
+                />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-sm sm:text-base font-bold text-accent">Pastor Elijah Adamu</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Senior Pastor & Spiritual Guide</p>
+                <p className="text-xs sm:text-sm text-foreground/80 mt-2 italic">Guiding believers in faith and truth</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pastor Francis Luguniah */}
+          <div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
+              <div className="flex-shrink-0">
+                <img
+                  src="/manus-storage/343339_56f2a83a.jpg"
+                  alt="Pastor Francis Luguniah"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg object-cover border-2 border-accent/30 shadow-md"
+                />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-sm sm:text-base font-bold text-accent">Pastor Francis Luguniah</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">Pastor & Spiritual Counselor</p>
+                <p className="text-xs sm:text-sm text-foreground/80 mt-2 italic">Serving with compassion and wisdom</p>
+              </div>
+            </div>
           </div>
         </Card>
 
