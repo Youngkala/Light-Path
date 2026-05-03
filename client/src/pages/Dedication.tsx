@@ -103,11 +103,11 @@ export default function Dedication() {
           {/* Pastor Elijah Adamu */}
           <div className="mb-6 pb-6 border-b border-border/50">
             <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-              <div className="flex-shrink-0">
+              <div className="flex-shrink-0 bg-gradient-to-br from-primary/20 to-accent/10 rounded-lg p-1">
                 <img
                   src="/manus-storage/114883_425ea225.jpg"
                   alt="Pastor Elijah Adamu"
-                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-lg object-cover border-2 border-accent/30 shadow-md"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-md object-contain border-2 border-accent/30 shadow-md bg-background"
                 />
               </div>
               <div className="flex-1 text-center sm:text-left">
