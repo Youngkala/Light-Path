@@ -33,7 +33,12 @@ export default function Feedback() {
         message: message.trim(),
       });
 
-      toast.success("Thank you for helping improve LightPath 🙏");
+      // Show success message with email confirmation
+      const emailMessage = email.trim() 
+        ? "Thank you for helping improve LightPath! We've sent a confirmation to your email." 
+        : "Thank you for helping improve LightPath! Your feedback has been received.";
+      
+      toast.success(emailMessage + " 🙏");
       setName("");
       setEmail("");
       setFeedbackType("review");
@@ -208,6 +213,15 @@ export default function Feedback() {
               <li>• Share what you liked or what could be improved</li>
               <li>• Your email helps us follow up with you</li>
             </ul>
+          </Card>
+
+          {/* Email Notification Info */}
+          <Card className="bg-primary/5 border border-primary/20 p-6 rounded-2xl">
+            <h3 className="font-semibold text-foreground mb-2">📧 Email Notifications</h3>
+            <p className="text-sm text-muted-foreground">
+              All feedback is sent to our support team at <span className="font-mono text-accent">lightpath2109@gmail.com</span>. 
+              If you provide your email, we may reach out to discuss your feedback further.
+            </p>
           </Card>
         </div>
       </main>

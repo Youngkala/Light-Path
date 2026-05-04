@@ -14,6 +14,7 @@ import {
   submitFeedback, getAllFeedback, getUserFeedback
 } from "./db";
 import { invokeLLM } from "./_core/llm";
+import { sendFeedbackEmail } from "./_core/emailService";
 
 export const appRouter = router({
   system: systemRouter,
@@ -236,6 +237,10 @@ export const appRouter = router({
         message: z.string().min(1)
       }))
       .mutation(async ({ ctx, input }) => {
+        // Map bug_report to bug for email service
+        const feedbackType = input.feedbackType === "bug_report" ? "bug" : input.feedbackType;
+        
+        // Save to database
         await submitFeedback({
           userId: ctx.user.id,
           name: input.name,
@@ -244,6 +249,17 @@ export const appRouter = router({
           rating: input.rating,
           message: input.message
         });
+        
+        // Send email notification
+        await sendFeedbackEmail({
+          name: input.name,
+          email: input.email,
+          feedbackType: feedbackType as "review" | "complaint" | "suggestion" | "bug",
+          rating: input.rating || 0,
+          message: input.message,
+          submittedAt: new Date()
+        });
+        
         return { success: true };
       }),
     getAll: protectedProcedure.query(async ({ ctx }) => {
