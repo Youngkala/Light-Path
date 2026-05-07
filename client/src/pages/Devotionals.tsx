@@ -9,7 +9,7 @@ export default function Devotionals() {
   const [selectedDevotional, setSelectedDevotional] = useState<number | null>(null);
 
   const { data: devotionals, isLoading, refetch } = trpc.devotionals.list.useQuery();
-  const { data: bookmarks } = trpc.devotionals.getBookmarks.useQuery();
+  const { data: bookmarks } = trpc.devotionals.getBookmarked.useQuery();
   const bookmarkMutation = trpc.devotionals.bookmark.useMutation();
   const removeBookmarkMutation = trpc.devotionals.removeBookmark.useMutation();
 

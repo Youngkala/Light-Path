@@ -29,6 +29,13 @@
       "when": 1776957449732,
       "tag": "0003_fixed_azazel",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1778089770180,
+      "tag": "0004_cloudy_zaladane",
+      "breakpoints": true
     }
   ]
 }

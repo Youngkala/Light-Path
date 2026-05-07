@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
   devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses,
-  chatSessions, feedbacks, InsertFeedback
+  chatSessions, feedbacks, InsertFeedback, passwordResetTokens
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -22,6 +22,82 @@ export async function getDb() {
   return _db;
 }
 
+// Email/Password Authentication
+export async function createUser(email: string, name: string, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  try {
+    const result = await db.insert(users).values({
+      email,
+      name,
+      passwordHash,
+      loginMethod: "email",
+      lastSignedIn: new Date(),
+    });
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to create user:", error);
+    throw error;
+  }
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getUserById(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateUserLastSignedIn(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
+// Password Reset Token queries
+export async function createPasswordResetToken(userId: number, token: string, expiresAt: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.insert(passwordResetTokens).values({ userId, token, expiresAt });
+}
+
+export async function getPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(passwordResetTokens)
+    .where(eq(passwordResetTokens.token, token))
+    .limit(1);
+  
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function deletePasswordResetToken(tokenId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return db.delete(passwordResetTokens).where(eq(passwordResetTokens.id, tokenId));
+}
+
 export async function upsertUser(user: InsertUser): Promise<void> {
   if (!user.openId) {
     throw new Error("User openId is required for upsert");
@@ -36,6 +112,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   try {
     const values: InsertUser = {
       openId: user.openId,
+      email: user.email || `oauth-${user.openId}@lightpath.local`,
     };
     const updateSet: Record<string, unknown> = {};
 
@@ -45,9 +122,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const assignNullable = (field: TextField) => {
       const value = user[field];
       if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
+      // For email, never allow null - use fallback if needed
+      if (field === 'email') {
+        const normalized = value || `oauth-${user.openId}@lightpath.local`;
+        values[field] = normalized;
+        updateSet[field] = normalized;
+      } else {
+        const normalized = value ?? undefined;
+        if (normalized !== undefined) {
+          values[field] = normalized;
+          updateSet[field] = normalized;
+        }
+      }
     };
 
     textFields.forEach(assignNullable);

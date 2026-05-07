@@ -276,9 +276,9 @@ class SDKServer {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
         await db.upsertUser({
           openId: userInfo.openId,
-          name: userInfo.name || null,
-          email: userInfo.email ?? null,
-          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
+          name: userInfo.name || undefined,
+          email: userInfo.email || `oauth-${userInfo.openId}@lightpath.local`,
+          loginMethod: (userInfo.loginMethod ?? userInfo.platform) || undefined,
           lastSignedIn: signedInAt,
         });
         user = await db.getUserByOpenId(userInfo.openId);
@@ -294,6 +294,7 @@ class SDKServer {
 
     await db.upsertUser({
       openId: user.openId,
+      email: user.email || `oauth-${user.openId}@lightpath.local`,
       lastSignedIn: signedInAt,
     });
 

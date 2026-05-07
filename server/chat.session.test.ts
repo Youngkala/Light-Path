@@ -30,11 +30,11 @@ describe("Chat Session Management", () => {
     const ctx = createTestContext(userId);
     const caller = appRouter.createCaller(ctx);
 
-    const result = await caller.spiritualMentor.createSession();
+    const result = await caller.chat.createSession({});
 
-    expect(result.success).toBe(true);
-    expect(result.sessionId).toBeDefined();
-    expect(typeof result.sessionId).toBe("number");
+    expect(result).toBeDefined();
+    expect(result.id).toBeDefined();
+    expect(typeof result.id).toBe("number");
   });
 
   it("should retrieve user's chat sessions", async () => {
@@ -43,29 +43,29 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session first
-    await caller.spiritualMentor.createSession();
+    await caller.chat.createSession({});
 
     // Get sessions
-    const sessions = await caller.spiritualMentor.getSessions();
+    const sessions = await caller.chat.getSessions();
 
     expect(Array.isArray(sessions)).toBe(true);
     expect(sessions.length).toBeGreaterThan(0);
   });
 
-  it("should get the active chat session", async () => {
+  it("should get user's chat sessions", async () => {
     const userId = 1;
     const ctx = createTestContext(userId);
     const caller = appRouter.createCaller(ctx);
 
     // Create a session
-    await caller.spiritualMentor.createSession();
+    await caller.chat.createSession({});
 
-    // Get active session
-    const activeSession = await caller.spiritualMentor.getActiveSession();
+    // Get sessions
+    const sessions = await caller.chat.getSessions();
 
-    expect(activeSession).toBeDefined();
-    expect(activeSession?.userId).toBe(userId);
-    expect(activeSession?.isActive).toBe(true);
+    expect(Array.isArray(sessions)).toBe(true);
+    expect(sessions.length).toBeGreaterThan(0);
+    expect(sessions[0]?.userId).toBe(userId);
   });
 
   it("should retrieve message history for a session", async () => {
@@ -74,17 +74,17 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session
-    const sessionResult = await caller.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller.chat.createSession({});
+    const sessionId = sessionResult.id;
 
     // Send a message
-    await caller.spiritualMentor.chat({
+    await caller.chat.sendMessage({
       sessionId,
       message: "Hello, Spiritual Mentor",
     });
 
     // Get messages
-    const messages = await caller.spiritualMentor.getMessages({ sessionId });
+    const messages = await caller.chat.getMessages({ sessionId });
 
     expect(Array.isArray(messages)).toBe(true);
     expect(messages.length).toBeGreaterThan(0);
@@ -98,24 +98,24 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session and send messages
-    const sessionResult = await caller.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller.chat.createSession({});
+    const sessionId = sessionResult.id;
 
-    await caller.spiritualMentor.chat({
+    await caller.chat.sendMessage({
       sessionId,
       message: "First message",
     });
 
     // Verify messages exist
-    let messages = await caller.spiritualMentor.getMessages({ sessionId });
+    let messages = await caller.chat.getMessages({ sessionId });
     expect(messages.length).toBeGreaterThan(0);
 
     // Clear chat
-    const clearResult = await caller.spiritualMentor.clearChat({ sessionId });
+    const clearResult = await caller.chat.clearMessages({ sessionId });
     expect(clearResult.success).toBe(true);
 
     // Verify messages are cleared
-    messages = await caller.spiritualMentor.getMessages({ sessionId });
+    messages = await caller.chat.getMessages({ sessionId });
     expect(messages.length).toBe(0);
   });
 
@@ -127,12 +127,12 @@ describe("Chat Session Management", () => {
     const caller2 = appRouter.createCaller(user2Ctx);
 
     // Create sessions for different users
-    await caller1.spiritualMentor.createSession();
-    await caller2.spiritualMentor.createSession();
+    await caller1.chat.createSession({});
+    await caller2.chat.createSession({});
 
     // Get sessions for each user
-    const sessions1 = await caller1.spiritualMentor.getSessions();
-    const sessions2 = await caller2.spiritualMentor.getSessions();
+    const sessions1 = await caller1.chat.getSessions();
+    const sessions2 = await caller2.chat.getSessions();
 
     // Each user should only see their own sessions
     expect(sessions1.length).toBeGreaterThan(0);
@@ -147,18 +147,18 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session
-    const sessionResult = await caller.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller.chat.createSession({});
+    const sessionId = sessionResult.id;
 
     // Send a message
-    await caller.spiritualMentor.chat({
+    await caller.chat.sendMessage({
       sessionId,
       message: "First message",
     });
 
     // Query messages multiple times
-    const history1 = await caller.spiritualMentor.getMessages({ sessionId });
-    const history2 = await caller.spiritualMentor.getMessages({ sessionId });
+    const history1 = await caller.chat.getMessages({ sessionId });
+    const history2 = await caller.chat.getMessages({ sessionId });
 
     // Both queries should return the same data
     expect(history1.length).toBeGreaterThan(0);
@@ -172,12 +172,12 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session
-    const sessionResult = await caller.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller.chat.createSession({});
+    const sessionId = sessionResult.id;
 
     // Try to send an empty message - should fail validation
     try {
-      await caller.spiritualMentor.chat({
+      await caller.chat.sendMessage({
         sessionId,
         message: "",
       });
@@ -195,11 +195,11 @@ describe("Chat Session Management", () => {
     const caller = appRouter.createCaller(ctx);
 
     // Create a session
-    const createResult = await caller.spiritualMentor.createSession();
-    const sessionId = createResult.sessionId;
+    const createResult = await caller.chat.createSession({});
+    const sessionId = createResult.id;
 
     // Get the session via getSessions
-    const sessions = await caller.spiritualMentor.getSessions();
+    const sessions = await caller.chat.getSessions();
     const foundSession = sessions.find((s: any) => s.id === sessionId);
 
     expect(foundSession).toBeDefined();
@@ -215,12 +215,12 @@ describe("Chat Session Management", () => {
     const caller2 = appRouter.createCaller(user2Ctx);
 
     // User 1 creates a session
-    const sessionResult = await caller1.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller1.chat.createSession({});
+    const sessionId = sessionResult.id;
 
     // User 2 tries to access User 1's session - should fail
     try {
-      await caller2.spiritualMentor.getMessages({ sessionId });
+      await caller2.chat.getMessages({ sessionId });
       expect.fail("Should have thrown authorization error");
     } catch (error: any) {
       expect(error).toBeDefined();
@@ -236,12 +236,12 @@ describe("Chat Session Management", () => {
     const caller2 = appRouter.createCaller(user2Ctx);
 
     // User 1 creates a session
-    const sessionResult = await caller1.spiritualMentor.createSession();
-    const sessionId = sessionResult.sessionId;
+    const sessionResult = await caller1.chat.createSession({});
+    const sessionId = sessionResult.id;
 
     // User 2 tries to clear User 1's session - should fail
     try {
-      await caller2.spiritualMentor.clearChat({ sessionId });
+      await caller2.chat.clearMessages({ sessionId });
       expect.fail("Should have thrown authorization error");
     } catch (error: any) {
       expect(error).toBeDefined();

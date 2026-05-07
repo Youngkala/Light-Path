@@ -46,7 +46,7 @@ export default function PrayerJournal() {
 
   const handleMarkAnswered = async (id: number) => {
     try {
-      await updateMutation.mutateAsync({ id, isAnswered: true, answeredAt: new Date() });
+      await updateMutation.mutateAsync({ id, isAnswered: true });
       refetch();
       toast.success("Prayer marked as answered");
     } catch (error) {

@@ -17,6 +17,9 @@ import About from "./pages/About";
 import AboutDeveloper from "./pages/AboutDeveloper";
 import Dedication from "./pages/Dedication";
 import Feedback from "./pages/Feedback";
+import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BottomNavigation from "./components/BottomNavigation";
 
@@ -27,6 +30,9 @@ function Router() {
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/login" component={Login} />
+          <Route path="/signup" component={Signup} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password" component={ResetPassword} />
           <Route path="/dashboard" component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/prayers" component={() => <ProtectedRoute><PrayerJournal /></ProtectedRoute>} />
           <Route path="/habits" component={() => <ProtectedRoute><HabitTracker /></ProtectedRoute>} />

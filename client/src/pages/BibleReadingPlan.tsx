@@ -12,8 +12,8 @@ export default function BibleReadingPlan() {
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [notes, setNotes] = useState("");
 
-  const { data: chapters, refetch } = trpc.bibleReadingPlan.list.useQuery();
-  const updateMutation = trpc.bibleReadingPlan.updateChapter.useMutation();
+  const { data: chapters, refetch } = trpc.bibleChapters.list.useQuery();
+  const updateMutation = trpc.bibleChapters.createOrUpdate.useMutation();
 
   const books = ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel"];
   const chapters_count = 50;

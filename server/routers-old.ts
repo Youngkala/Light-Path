@@ -1,4 +1,4 @@
-import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
+import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
@@ -28,68 +28,6 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
-    // Email/Password Authentication
-    signup: publicProcedure
-      .input(z.object({
-        email: z.string().email("Invalid email format"),
-        name: z.string().min(1, "Name is required"),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        confirmPassword: z.string().min(6),
-      }))
-      .mutation(async ({ input }) => {
-        if (input.password !== input.confirmPassword) {
-          throw new Error("Passwords do not match");
-        }
-        await signup(input.email, input.name, input.password);
-        return { success: true, message: "Account created successfully" };
-      }),
-    loginEmail: publicProcedure
-      .input(z.object({
-        email: z.string().email("Invalid email format"),
-        password: z.string().min(1, "Password is required"),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const user = await login(input.email, input.password);
-        const cookieOptions = getSessionCookieOptions(ctx.req);
-        const sessionToken = Buffer.from(JSON.stringify({ userId: user.id, email: user.email })).toString('base64');
-        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
-        return {
-          success: true,
-          user: {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-          },
-        };
-      }),
-    requestPasswordReset: publicProcedure
-      .input(z.object({
-        email: z.string().email("Invalid email format"),
-      }))
-      .mutation(async ({ input }) => {
-        try {
-          await generatePasswordResetToken(input.email);
-        } catch (error) {
-          // Don't reveal if email exists
-        }
-        return {
-          success: true,
-          message: "If an account exists, a password reset link has been sent to your email",
-        };
-      }),
-    resetPassword: publicProcedure
-      .input(z.object({
-        token: z.string().min(1, "Reset token is required"),
-        newPassword: z.string().min(6, "Password must be at least 6 characters"),
-        confirmPassword: z.string().min(6),
-      }))
-      .mutation(async ({ input }) => {
-        if (input.newPassword !== input.confirmPassword) {
-          throw new Error("Passwords do not match");
-        }
-        await resetPassword(input.token, input.newPassword);
-        return { success: true, message: "Password reset successfully" };
-      }),
   }),
 
   // Prayer Journal endpoints
@@ -112,14 +50,16 @@ export const appRouter = router({
         content: z.string().optional(),
         category: z.string().optional(),
         isAnswered: z.boolean().optional(),
+        answeredAt: z.date().optional()
       }))
       .mutation(async ({ ctx, input }) => {
-        await updatePrayer(input.id, input);
+        const { id, ...updates } = input;
+        await updatePrayer(id, updates);
         return { success: true };
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         await deletePrayer(input.id);
         return { success: true };
       }),
@@ -142,36 +82,33 @@ export const appRouter = router({
       }),
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         await deleteHabit(input.id);
         return { success: true };
       }),
     logCompletion: protectedProcedure
       .input(z.object({ habitId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         await logHabitCompletion(input.habitId);
         return { success: true };
       }),
     getLogs: protectedProcedure
       .input(z.object({ habitId: z.number() }))
-      .query(async ({ ctx, input }) => {
+      .query(async ({ input }) => {
         return getHabitLogs(input.habitId);
       }),
   }),
 
   // Devotionals endpoints
   devotionals: router({
-    list: publicProcedure.query(async () => {
+    list: protectedProcedure.query(async () => {
       return getDevotionals();
     }),
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return getDevotionalById(input.id);
       }),
-    getBookmarked: protectedProcedure.query(async ({ ctx }) => {
-      return getUserBookmarkedDevotionals(ctx.user.id);
-    }),
     bookmark: protectedProcedure
       .input(z.object({ devotionalId: z.number() }))
       .mutation(async ({ ctx, input }) => {
@@ -184,14 +121,17 @@ export const appRouter = router({
         await removeBookmark(ctx.user.id, input.devotionalId);
         return { success: true };
       }),
+    getBookmarks: protectedProcedure.query(async ({ ctx }) => {
+      return getUserBookmarkedDevotionals(ctx.user.id);
+    }),
   }),
 
   // Bible Reading Plan endpoints
-  bibleChapters: router({
+  bibleReadingPlan: router({
     list: protectedProcedure.query(async ({ ctx }) => {
       return getUserBibleChapters(ctx.user.id);
     }),
-    createOrUpdate: protectedProcedure
+    updateChapter: protectedProcedure
       .input(z.object({
         book: z.string(),
         chapter: z.number(),
@@ -204,62 +144,59 @@ export const appRouter = router({
       }),
   }),
 
-  // AI Chat endpoints
-  chat: router({
-    createSession: protectedProcedure
-      .input(z.object({ title: z.string().optional() }))
-      .mutation(async ({ ctx, input }) => {
-        const session = await createChatSession(ctx.user.id, input.title);
-        return session;
-      }),
+  // AI Spiritual Mentor endpoints with session management
+  spiritualMentor: router({
+    createSession: protectedProcedure.mutation(async ({ ctx }) => {
+      const session = await createChatSession(ctx.user.id);
+      return { success: true, sessionId: session.id };
+    }),
     getSessions: protectedProcedure.query(async ({ ctx }) => {
       return getUserChatSessions(ctx.user.id);
+    }),
+    getActiveSession: protectedProcedure.query(async ({ ctx }) => {
+      return getActiveChatSession(ctx.user.id);
     }),
     getMessages: protectedProcedure
       .input(z.object({ sessionId: z.number() }))
       .query(async ({ ctx, input }) => {
         return getSessionMessages(input.sessionId, ctx.user.id);
       }),
-    sendMessage: protectedProcedure
+    chat: protectedProcedure
       .input(z.object({
         sessionId: z.number(),
         message: z.string().min(1)
       }))
       .mutation(async ({ ctx, input }) => {
-        const userMessage = input.message;
-        
-        // Get AI response
-        const response = await invokeLLM({
-          messages: [
-            {
-              role: "system" as const,
-              content: "You are a compassionate spiritual mentor and guide. Provide wise, scripture-grounded advice that helps users grow in their faith and spiritual journey. Be warm, encouraging, and deeply thoughtful in your responses."
-            },
-            {
-              role: "user" as const,
-              content: userMessage
-            }
-          ]
-        });
+        const messages = await getSessionMessages(input.sessionId);
+        const recentMessages = messages.slice(-5);
 
-        const assistantResponse = typeof response.choices[0]?.message?.content === 'string' 
-          ? response.choices[0].message.content 
-          : "I'm here to help with your spiritual journey.";
+        const systemPrompt = `You are LightPath Spiritual Mentor, a compassionate and scripture-grounded AI assistant. Your role is to provide spiritual guidance rooted in Christian faith and Biblical wisdom. Always respond with kindness, compassion, and encouragement. Ground your responses in Scripture when relevant. Suggest Bible verses that relate to the user's concerns. Provide spiritual wisdom and guidance. Be supportive and uplifting. Avoid harmful or inappropriate content. Focus on spiritual growth and faith development.`;
 
-        // Save to database
-        await saveAIChat(input.sessionId, ctx.user.id, userMessage, assistantResponse as string);
+        const messageHistory: any[] = [
+          { role: "system", content: systemPrompt },
+          ...recentMessages.map(msg => [
+            { role: "user" as const, content: msg.userMessage },
+            { role: "assistant" as const, content: msg.assistantResponse }
+          ]).flat(),
+          { role: "user", content: input.message }
+        ];
 
-        return {
-          userMessage,
-          assistantResponse
-        };
+        const response = await invokeLLM({ messages: messageHistory });
+        const assistantMessage = response.choices?.[0]?.message?.content as string || "I'm here to support your spiritual journey. Please share what's on your heart.";
+
+        await saveAIChat(input.sessionId, ctx.user.id, input.message, assistantMessage);
+
+        return { response: assistantMessage };
       }),
-    clearMessages: protectedProcedure
+    clearChat: protectedProcedure
       .input(z.object({ sessionId: z.number() }))
       .mutation(async ({ ctx, input }) => {
         await clearSessionMessages(input.sessionId, ctx.user.id);
         return { success: true };
       }),
+    getHistory: protectedProcedure.query(async ({ ctx }) => {
+      return getUserAIChatHistory(ctx.user.id);
+    }),
   }),
 
   // Daily Verse endpoint

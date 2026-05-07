@@ -1,8 +1,7 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Heart, BookOpen, Zap, Users } from "lucide-react";
 
 export default function Home() {
@@ -38,7 +37,7 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-foreground">LightPath</h1>
           </div>
           <Button
-            onClick={() => window.location.href = getLoginUrl()}
+            onClick={() => setLocation("/login")}
             className="bg-accent hover:bg-accent/90 text-accent-foreground"
           >
             Sign In
@@ -57,7 +56,7 @@ export default function Home() {
           </p>
           <Button
             size="lg"
-            onClick={() => window.location.href = getLoginUrl()}
+            onClick={() => setLocation("/signup")}
             className="bg-accent hover:bg-accent/90 text-accent-foreground px-8 py-6 text-lg font-semibold"
           >
             Begin Your Journey
