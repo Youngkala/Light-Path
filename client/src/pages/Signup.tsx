@@ -38,13 +38,14 @@ export default function Signup() {
     try {
       setIsLoading(true);
       await signup(name, email, password, confirmPassword);
+      // Don't navigate - auth state change will trigger app rerender
+      // which will switch from AuthStack to AppStack
       toast.success("Account created! Logging you in...");
-      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Signup failed");
-    } finally {
       setIsLoading(false);
     }
+    // Note: isLoading stays true until auth state updates
   };
 
   return (

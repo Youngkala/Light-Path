@@ -8,7 +8,6 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
-  refresh: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,30 +27,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signupMutation = trpc.auth.signup.useMutation();
   const logoutMutation = trpc.auth.logout.useMutation();
 
-  // Initialize auth state from server and localStorage
+  // Initialize auth state on app startup
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // First, try to get auth state from server
+        console.log("[Auth] Initializing auth state...");
+        
+        // Check if user is authenticated on the server
         if (meQuery.data) {
+          console.log("[Auth] User authenticated:", meQuery.data.email);
           setUser(meQuery.data);
           setIsAuthenticated(true);
           localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
+          localStorage.setItem("isLoggedIn", "true");
         } else if (meQuery.isError) {
-          // Server says user is not authenticated
+          console.log("[Auth] User not authenticated");
           // Check localStorage as fallback
           const savedUser = localStorage.getItem("auth_user");
           if (savedUser) {
             try {
               const userData = JSON.parse(savedUser);
+              console.log("[Auth] Restoring user from localStorage:", userData.email);
               setUser(userData);
               setIsAuthenticated(true);
             } catch (e) {
+              console.log("[Auth] Failed to parse saved user, clearing storage");
               localStorage.removeItem("auth_user");
+              localStorage.removeItem("isLoggedIn");
               setUser(null);
               setIsAuthenticated(false);
             }
           } else {
+            console.log("[Auth] No saved user in localStorage");
             setUser(null);
             setIsAuthenticated(false);
           }
@@ -72,21 +79,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("[Auth] Attempting login for:", email);
       setIsLoading(true);
+      
+      // Call login endpoint
       const result = await loginMutation.mutateAsync({ email, password });
+      console.log("[Auth] Login successful");
       
-      // Refresh auth state after login
+      // Refresh auth state from server
       await utils.auth.me.refetch();
-      
-      // Update local state
-      const userData = await meQuery.refetch();
-      if (userData.data) {
-        setUser(userData.data);
+      if (meQuery.data) {
+        console.log("[Auth] Setting authenticated state for:", meQuery.data.email);
+        setUser(meQuery.data);
         setIsAuthenticated(true);
-        localStorage.setItem("auth_user", JSON.stringify(userData.data));
+        localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
+        localStorage.setItem("isLoggedIn", "true");
       }
     } catch (error) {
       console.error("[Auth] Login failed:", error);
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("isLoggedIn");
       throw error;
     } finally {
       setIsLoading(false);
@@ -95,26 +109,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signup = async (name: string, email: string, password: string, confirmPassword: string) => {
     try {
+      console.log("[Auth] Attempting signup for:", email);
       setIsLoading(true);
+      
+      // Call signup endpoint
       const result = await signupMutation.mutateAsync({
         name,
         email,
         password,
         confirmPassword,
       });
+      console.log("[Auth] Signup successful");
 
-      // Refresh auth state after signup
+      // Refresh auth state from server
       await utils.auth.me.refetch();
-      
-      // Update local state
-      const userData = await meQuery.refetch();
-      if (userData.data) {
-        setUser(userData.data);
+      if (meQuery.data) {
+        console.log("[Auth] Setting authenticated state for:", meQuery.data.email);
+        setUser(meQuery.data);
         setIsAuthenticated(true);
-        localStorage.setItem("auth_user", JSON.stringify(userData.data));
+        localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
+        localStorage.setItem("isLoggedIn", "true");
       }
     } catch (error) {
       console.error("[Auth] Signup failed:", error);
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("isLoggedIn");
       throw error;
     } finally {
       setIsLoading(false);
@@ -123,41 +144,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
+      console.log("[Auth] Logging out user");
       setIsLoading(true);
-      await logoutMutation.mutateAsync();
       
-      // Clear local state
+      // Call logout endpoint
+      await logoutMutation.mutateAsync();
+      console.log("[Auth] Logout successful");
+      
+      // Clear all auth state
       setUser(null);
       setIsAuthenticated(false);
       localStorage.removeItem("auth_user");
+      localStorage.removeItem("isLoggedIn");
       
       // Invalidate auth cache
       await utils.auth.me.invalidate();
     } catch (error) {
       console.error("[Auth] Logout failed:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const refresh = async () => {
-    try {
-      setIsLoading(true);
-      await utils.auth.me.refetch();
-      if (meQuery.data) {
-        setUser(meQuery.data);
-        setIsAuthenticated(true);
-        localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        localStorage.removeItem("auth_user");
-      }
-    } catch (error) {
-      console.error("[Auth] Refresh failed:", error);
+      // Still clear local state even if logout fails
       setUser(null);
       setIsAuthenticated(false);
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("isLoggedIn");
     } finally {
       setIsLoading(false);
     }
@@ -172,7 +180,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         signup,
         logout,
-        refresh,
       }}
     >
       {children}

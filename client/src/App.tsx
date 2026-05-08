@@ -1,56 +1,40 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import PrayerJournal from "./pages/PrayerJournal";
-import HabitTracker from "./pages/HabitTracker";
-import Devotionals from "./pages/Devotionals";
-import BibleReadingPlan from "./pages/BibleReadingPlan";
-import SpiritualMentor from "./pages/SpiritualMentor";
-import Settings from "./pages/Settings";
-import About from "./pages/About";
-import AboutDeveloper from "./pages/AboutDeveloper";
-import Dedication from "./pages/Dedication";
-import Feedback from "./pages/Feedback";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import ProtectedRoute from "./components/ProtectedRoute";
-import BottomNavigation from "./components/BottomNavigation";
+import ErrorBoundary from "./components/ErrorBoundary";
+import AuthStack from "./components/AuthStack";
+import AppStack from "./components/AppStack";
+import { Loader2, Heart } from "lucide-react";
 
-function Router() {
-  return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-1 pb-24">
-        <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={Signup} />
-          <Route path="/forgot-password" component={ForgotPassword} />
-          <Route path="/reset-password" component={ResetPassword} />
-          <Route path="/dashboard" component={() => <ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/prayers" component={() => <ProtectedRoute><PrayerJournal /></ProtectedRoute>} />
-          <Route path="/habits" component={() => <ProtectedRoute><HabitTracker /></ProtectedRoute>} />
-          <Route path="/devotionals" component={() => <ProtectedRoute><Devotionals /></ProtectedRoute>} />
-          <Route path="/bible" component={() => <ProtectedRoute><BibleReadingPlan /></ProtectedRoute>} />
-          <Route path="/mentor" component={() => <ProtectedRoute><SpiritualMentor /></ProtectedRoute>} />
-          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/about" component={() => <ProtectedRoute><About /></ProtectedRoute>} />
-          <Route path="/about-developer" component={() => <ProtectedRoute><AboutDeveloper /></ProtectedRoute>} />
-          <Route path="/dedication" component={() => <ProtectedRoute><Dedication /></ProtectedRoute>} />
-          <Route path="/feedback" component={() => <ProtectedRoute><Feedback /></ProtectedRoute>} />
-          <Route path="/404" component={NotFound} />
-          <Route component={NotFound} />
-        </Switch>
+/**
+ * Root App Component
+ * Conditionally renders AuthStack (login/signup) or AppStack (main app)
+ * based on authentication state
+ */
+function AppContent() {
+  const { isAuthenticated, isLoading } = useAuthContext();
+
+  // Show loading/splash screen while checking auth state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+            <Heart className="w-8 h-8 text-primary-foreground animate-pulse" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">LightPath</h1>
+          <p className="text-muted-foreground flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading your spiritual journey...
+          </p>
+        </div>
       </div>
-      <BottomNavigation />
-    </div>
-  );
+    );
+  }
+
+  // Render appropriate stack based on auth state
+  return isAuthenticated ? <AppStack /> : <AuthStack />;
 }
 
 function App() {
@@ -59,7 +43,7 @@ function App() {
       <ThemeProvider defaultTheme="dark" switchable>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AppContent />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

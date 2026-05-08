@@ -25,13 +25,14 @@ export default function Login() {
     try {
       setIsLoading(true);
       await login(email, password);
+      // Don't navigate - auth state change will trigger app rerender
+      // which will switch from AuthStack to AppStack
       toast.success("Login successful!");
-      navigate("/dashboard", { replace: true });
     } catch (error: any) {
       toast.error(error.message || "Login failed");
-    } finally {
       setIsLoading(false);
     }
+    // Note: isLoading stays true until auth state updates
   };
 
   return (

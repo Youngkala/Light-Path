@@ -2,18 +2,23 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Bell, Moon, Sun, LogOut, Info, ChevronRight, Heart, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Settings() {
   const [, setLocation] = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuthContext();
 
   const handleLogout = async () => {
-    await logout();
-    setLocation("/");
+    try {
+      await logout();
+      toast.success("Logged out successfully");
+      // Auth state change will trigger app rerender to show AuthStack
+    } catch (error) {
+      toast.error("Failed to logout");
+    }
   };
 
   return (
