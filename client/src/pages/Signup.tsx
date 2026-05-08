@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { trpc } from "@/lib/trpc";
 import { Eye, EyeOff, Loader2, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -13,19 +13,9 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [, navigate] = useLocation();
-
-  const signupMutation = trpc.auth.signup.useMutation({
-    onSuccess: async () => {
-      toast.success("Account created! Logging you in...");
-      // Auto-login after signup by redirecting to dashboard
-      // The session cookie is already set by the server
-      navigate("/dashboard", { replace: true });
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Signup failed");
-    },
-  });
+  const { signup } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,12 +35,16 @@ export default function Signup() {
       return;
     }
 
-    await signupMutation.mutateAsync({
-      name,
-      email,
-      password,
-      confirmPassword,
-    });
+    try {
+      setIsLoading(true);
+      await signup(name, email, password, confirmPassword);
+      toast.success("Account created! Logging you in...");
+      navigate("/dashboard", { replace: true });
+    } catch (error: any) {
+      toast.error(error.message || "Signup failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -78,7 +72,7 @@ export default function Signup() {
               onChange={(e) => setName(e.target.value)}
               placeholder="John Doe"
               className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              disabled={signupMutation.isPending}
+              disabled={isLoading}
             />
           </div>
 
@@ -93,7 +87,7 @@ export default function Signup() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              disabled={signupMutation.isPending}
+              disabled={isLoading}
             />
           </div>
 
@@ -109,7 +103,7 @@ export default function Signup() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                disabled={signupMutation.isPending}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -140,7 +134,7 @@ export default function Signup() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                disabled={signupMutation.isPending}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -160,9 +154,9 @@ export default function Signup() {
           <Button
             type="submit"
             className="w-full mt-6"
-            disabled={signupMutation.isPending}
+            disabled={isLoading}
           >
-            {signupMutation.isPending ? (
+            {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Creating account...

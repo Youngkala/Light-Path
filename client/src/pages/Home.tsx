@@ -1,20 +1,20 @@
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useAuthContext } from "@/contexts/AuthContext";
 import { Heart, BookOpen, Zap, Users } from "lucide-react";
 
 export default function Home() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuthContext();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      setLocation("/dashboard");
+    if (!isLoading && isAuthenticated) {
+      setLocation("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, loading, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">

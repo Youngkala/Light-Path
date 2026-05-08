@@ -2,25 +2,17 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { trpc } from "@/lib/trpc";
 import { Eye, EyeOff, Loader2, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [, navigate] = useLocation();
-
-  const loginMutation = trpc.auth.loginEmail.useMutation({
-    onSuccess: () => {
-      toast.success("Login successful!");
-      navigate("/dashboard", { replace: true });
-    },
-    onError: (error: any) => {
-      toast.error(error.message || "Login failed");
-    },
-  });
+  const { login } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +22,16 @@ export default function Login() {
       return;
     }
 
-    await loginMutation.mutateAsync({ email, password });
+    try {
+      setIsLoading(true);
+      await login(email, password);
+      toast.success("Login successful!");
+      navigate("/dashboard", { replace: true });
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,7 +59,7 @@ export default function Login() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              disabled={loginMutation.isPending}
+              disabled={isLoading}
             />
           </div>
 
@@ -74,7 +75,7 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                disabled={loginMutation.isPending}
+                disabled={isLoading}
               />
               <button
                 type="button"
@@ -93,12 +94,12 @@ export default function Login() {
           {/* Submit Button */}
           <Button
             type="submit"
-            className="w-full mt-6"
-            disabled={loginMutation.isPending}
+            disabled={isLoading}
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2"
           >
-            {loginMutation.isPending ? (
+            {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Signing in...
               </>
             ) : (
