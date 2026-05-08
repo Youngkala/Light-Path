@@ -244,3 +244,25 @@
 - [x] Password visibility toggles and error handling
 - [x] Fixed COOKIE_NAME session management
 - [x] Final checkpoint with complete authentication system
+
+
+## Phase 16: Authentication Flow Fixes & Google Sign-In Removal
+- [x] Fixed session management in sdk.ts to support email/password auth
+- [x] Updated Login.tsx to redirect to /dashboard after successful login
+- [x] Updated Signup.tsx to redirect to /dashboard after successful signup (with auto-login)
+- [x] Updated ProtectedRoute to redirect to /login instead of OAuth
+- [x] Updated main.tsx to redirect to /login on unauthorized errors
+- [x] Updated DashboardLayout to redirect to /login instead of OAuth
+- [x] Fixed DashboardLayout hook usage (moved useLocation to top level)
+- [x] Removed all OAuth redirect logic from useAuth.ts
+- [x] Updated signup endpoint to create session cookie after account creation
+- [x] Removed all OAuth redirect references from frontend
+- [x] Login screen shows only email/password fields
+- [x] Signup screen shows only name/email/password fields
+- [x] All 39 tests passing with auth flow changes
+- [x] No TypeScript errors
+- [x] Auth flow redirects working correctly
+- [x] Session persistence fixed
+- [x] No redirect loops
+- [x] Mobile-responsive auth screens
+- [x] Final checkpoint with complete auth flow fixes

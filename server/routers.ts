@@ -11,7 +11,8 @@ import {
   getUserBibleChapters, createOrUpdateBibleChapter,
   createChatSession, getUserChatSessions, getActiveChatSession, getSessionMessages, saveAIChat, clearSessionMessages, getUserAIChatHistory, getSessionById,
   getDailyVerse,
-  submitFeedback, getAllFeedback, getUserFeedback
+  submitFeedback, getAllFeedback, getUserFeedback,
+  getUserByEmail
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendFeedbackEmail } from "./_core/emailService";
@@ -36,12 +37,29 @@ export const appRouter = router({
         password: z.string().min(6, "Password must be at least 6 characters"),
         confirmPassword: z.string().min(6),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         if (input.password !== input.confirmPassword) {
           throw new Error("Passwords do not match");
         }
-        await signup(input.email, input.name, input.password);
-        return { success: true, message: "Account created successfully" };
+        const result = await signup(input.email, input.name, input.password);
+        // Get the created user
+        const createdUser = await getUserByEmail(input.email);
+        if (!createdUser) {
+          throw new Error("Failed to retrieve created user");
+        }
+        // Auto-login after signup by setting session cookie
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        const sessionToken = Buffer.from(JSON.stringify({ userId: createdUser.id, email: createdUser.email })).toString('base64');
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+        return { 
+          success: true, 
+          message: "Account created successfully",
+          user: {
+            id: createdUser.id,
+            email: createdUser.email,
+            name: createdUser.name,
+          },
+        };
       }),
     loginEmail: publicProcedure
       .input(z.object({

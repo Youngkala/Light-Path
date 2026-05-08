@@ -257,48 +257,80 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<User> {
-    // Regular authentication flow
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
-    const session = await this.verifySession(sessionCookie);
+    const signedInAt = new Date();
 
-    if (!session) {
-      throw ForbiddenError("Invalid session cookie");
+    // Try OAuth session first
+    const session = await this.verifySession(sessionCookie);
+    if (session) {
+      const sessionUserId = session.openId;
+      let user = await db.getUserByOpenId(sessionUserId);
+
+      // If user not in DB, sync from OAuth server automatically
+      if (!user) {
+        try {
+          const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+          await db.upsertUser({
+            openId: userInfo.openId,
+            name: userInfo.name || undefined,
+            email: userInfo.email || `oauth-${userInfo.openId}@lightpath.local`,
+            loginMethod: (userInfo.loginMethod ?? userInfo.platform) || undefined,
+            lastSignedIn: signedInAt,
+          });
+          user = await db.getUserByOpenId(userInfo.openId);
+        } catch (error) {
+          console.error("[Auth] Failed to sync user from OAuth:", error);
+          throw ForbiddenError("Failed to sync user info");
+        }
+      }
+
+      if (!user) {
+        throw ForbiddenError("User not found");
+      }
+
+      await db.upsertUser({
+        openId: user.openId,
+        email: user.email || `oauth-${user.openId}@lightpath.local`,
+        lastSignedIn: signedInAt,
+      });
+
+      return user;
     }
 
-    const sessionUserId = session.openId;
-    const signedInAt = new Date();
-    let user = await db.getUserByOpenId(sessionUserId);
-
-    // If user not in DB, sync from OAuth server automatically
-    if (!user) {
+    // Try email/password session (base64 encoded JSON)
+    if (sessionCookie) {
       try {
-        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+        const decoded = Buffer.from(sessionCookie, 'base64').toString('utf-8');
+        const sessionData = JSON.parse(decoded);
+        const { userId } = sessionData;
+
+        if (!userId) {
+          throw ForbiddenError("Invalid session format");
+        }
+
+        const user = await db.getUserById(userId);
+        if (!user) {
+          throw ForbiddenError("User not found");
+        }
+
+        // Update last signed in
         await db.upsertUser({
-          openId: userInfo.openId,
-          name: userInfo.name || undefined,
-          email: userInfo.email || `oauth-${userInfo.openId}@lightpath.local`,
-          loginMethod: (userInfo.loginMethod ?? userInfo.platform) || undefined,
+          openId: user.openId,
+          email: user.email,
           lastSignedIn: signedInAt,
         });
-        user = await db.getUserByOpenId(userInfo.openId);
+
+        return user;
       } catch (error) {
-        console.error("[Auth] Failed to sync user from OAuth:", error);
-        throw ForbiddenError("Failed to sync user info");
+        if (error instanceof Error && error.message.includes("Invalid session")) {
+          throw error;
+        }
+        console.warn("[Auth] Email/password session verification failed", String(error));
       }
     }
 
-    if (!user) {
-      throw ForbiddenError("User not found");
-    }
-
-    await db.upsertUser({
-      openId: user.openId,
-      email: user.email || `oauth-${user.openId}@lightpath.local`,
-      lastSignedIn: signedInAt,
-    });
-
-    return user;
+    throw ForbiddenError("Invalid session cookie");
   }
 }
 

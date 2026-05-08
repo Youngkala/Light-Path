@@ -16,9 +16,11 @@ export default function Signup() {
   const [, navigate] = useLocation();
 
   const signupMutation = trpc.auth.signup.useMutation({
-    onSuccess: () => {
-      toast.success("Account created! Please log in.");
-      navigate("/login", { replace: true });
+    onSuccess: async () => {
+      toast.success("Account created! Logging you in...");
+      // Auto-login after signup by redirecting to dashboard
+      // The session cookie is already set by the server
+      navigate("/dashboard", { replace: true });
     },
     onError: (error: any) => {
       toast.error(error.message || "Signup failed");

@@ -15,7 +15,7 @@ export default function Login() {
   const loginMutation = trpc.auth.loginEmail.useMutation({
     onSuccess: () => {
       toast.success("Login successful!");
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     },
     onError: (error: any) => {
       toast.error(error.message || "Login failed");

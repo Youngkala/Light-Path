@@ -1,16 +1,17 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEffect } from "react";
-import { getLoginUrl } from "@/const";
+import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, loading } = useAuth();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
+      navigate("/login", { replace: true });
     }
-  }, [isAuthenticated, loading]);
+  }, [isAuthenticated, loading, navigate]);
 
   if (loading) {
     return (
