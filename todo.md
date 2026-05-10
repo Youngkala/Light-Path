@@ -303,3 +303,16 @@
 - [x] Auth state properly controls app rendering
 - [x] Session persists to localStorage
 - [x] Final checkpoint with working two-stack navigation
+
+
+## Phase 19: Critical Authentication Bug Fixes
+- [x] Fixed client-side auth state bug in AuthContext.login
+- [x] Fixed client-side auth state bug in AuthContext.signup
+- [x] Changed from checking stale meQuery.data to using utils.auth.me.fetch() result directly
+- [x] Fixed server-side session handling for email/password users without openId
+- [x] Updated authenticateRequest to handle users without openId field
+- [x] Prevented upsertUser from throwing when openId is null for email/password users
+- [x] All 39 tests passing after fixes
+- [x] Auth state now properly updates after login/signup
+- [x] Session cookie properly verified for email/password sessions
+- [x] Users should now redirect to dashboard after successful authentication

@@ -86,14 +86,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await loginMutation.mutateAsync({ email, password });
       console.log("[Auth] Login successful");
       
-      // Refresh auth state from server
-      await utils.auth.me.refetch();
-      if (meQuery.data) {
-        console.log("[Auth] Setting authenticated state for:", meQuery.data.email);
-        setUser(meQuery.data);
+      // Refresh auth state from server - invalidate cache and re-query
+      await utils.auth.me.invalidate();
+      const userData = await utils.auth.me.fetch();
+      if (userData) {
+        console.log("[Auth] Setting authenticated state for:", userData.email);
+        setUser(userData);
         setIsAuthenticated(true);
-        localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
+        localStorage.setItem("auth_user", JSON.stringify(userData));
         localStorage.setItem("isLoggedIn", "true");
+      } else {
+        console.error("[Auth] No user data returned after login");
+        throw new Error("Failed to authenticate after login");
       }
     } catch (error) {
       console.error("[Auth] Login failed:", error);
@@ -121,14 +125,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       console.log("[Auth] Signup successful");
 
-      // Refresh auth state from server
-      await utils.auth.me.refetch();
-      if (meQuery.data) {
-        console.log("[Auth] Setting authenticated state for:", meQuery.data.email);
-        setUser(meQuery.data);
+      // Refresh auth state from server - invalidate cache and re-query
+      await utils.auth.me.invalidate();
+      const userData = await utils.auth.me.fetch();
+      if (userData) {
+        console.log("[Auth] Setting authenticated state for:", userData.email);
+        setUser(userData);
         setIsAuthenticated(true);
-        localStorage.setItem("auth_user", JSON.stringify(meQuery.data));
+        localStorage.setItem("auth_user", JSON.stringify(userData));
         localStorage.setItem("isLoggedIn", "true");
+      } else {
+        console.error("[Auth] No user data returned after signup");
+        throw new Error("Failed to authenticate after signup");
       }
     } catch (error) {
       console.error("[Auth] Signup failed:", error);

@@ -314,12 +314,18 @@ class SDKServer {
           throw ForbiddenError("User not found");
         }
 
-        // Update last signed in
-        await db.upsertUser({
-          openId: user.openId,
-          email: user.email,
-          lastSignedIn: signedInAt,
-        });
+        // Update last signed in for email/password users
+        // Email/password users may not have openId, so only update if they have one
+        if (user.openId) {
+          await db.upsertUser({
+            openId: user.openId,
+            email: user.email,
+            lastSignedIn: signedInAt,
+          });
+        } else {
+          // For email/password users without openId, just update lastSignedIn directly
+          await db.updateUserLastSignedIn(user.id);
+        }
 
         return user;
       } catch (error) {
