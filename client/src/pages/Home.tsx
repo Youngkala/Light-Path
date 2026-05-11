@@ -1,8 +1,37 @@
-import { useLocation } from "wouter";
 import { useEffect } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { Heart, BookOpen, Zap, Users } from "lucide-react";
+import { useDailyVerse } from "@/hooks/useDailyVerse";
+import { Heart, BookOpen, Zap, Users, Quote } from "lucide-react";
+
+function DailyVerseSection() {
+  const { verse, isLoading } = useDailyVerse();
+
+  if (isLoading || !verse) {
+    return null;
+  }
+
+  return (
+    <section className="bg-gradient-to-r from-amber-900/20 via-amber-800/10 to-amber-900/20 border-y border-amber-700/30 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-slate-900/60 backdrop-blur-sm border border-amber-700/40 rounded-lg p-8 shadow-lg">
+          <div className="flex items-start gap-4">
+            <Quote className="w-8 h-8 text-amber-600 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <p className="text-lg md:text-xl italic text-amber-50 mb-4 leading-relaxed">
+                "{verse.text}"
+              </p>
+              <p className="text-amber-600 font-semibold text-sm md:text-base">
+                {verse.reference}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuthContext();
@@ -44,6 +73,9 @@ export default function Home() {
           </Button>
         </div>
       </nav>
+
+      {/* Daily Verse Section */}
+      <DailyVerseSection />
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 py-16 md:py-24">
