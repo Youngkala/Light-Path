@@ -17,15 +17,15 @@ const MessageBubble = memo(({ message }: { message: Message }) => {
   const isUser = message.role === "user";
 
   return (
-    <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
+    <div className={`flex w-full mb-3 px-3 ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-xs px-4 py-3 rounded-lg ${
+        className={`max-w-[85%] sm:max-w-[70%] md:max-w-[60%] px-4 py-3 rounded-lg ${
           isUser
             ? "bg-amber-600 text-white rounded-br-none"
             : "bg-slate-700 text-slate-100 rounded-bl-none"
         }`}
       >
-        <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-sm sm:text-base leading-relaxed whitespace-pre-wrap break-words">
           {message.content}
         </p>
       </div>
@@ -37,7 +37,7 @@ MessageBubble.displayName = "MessageBubble";
 
 // Memoized typing indicator
 const TypingIndicator = memo(() => (
-  <div className="flex mb-4 justify-start">
+  <div className="flex w-full mb-3 px-3 justify-start">
     <div className="bg-slate-700 px-4 py-3 rounded-lg rounded-bl-none">
       <div className="flex gap-1">
         <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse" />
@@ -68,6 +68,7 @@ export default function SpiritualMentor() {
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // tRPC mutations and queries
   const createSessionMutation = trpc.chat.createSession.useMutation();
@@ -226,7 +227,7 @@ export default function SpiritualMentor() {
   // Render loading state
   if (isLoading) {
     return (
-      <div className="flex-1 bg-slate-900 flex justify-center items-center min-h-screen">
+      <div className="w-full h-screen bg-slate-900 flex justify-center items-center">
         <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
       </div>
     );
@@ -236,46 +237,51 @@ export default function SpiritualMentor() {
   const isEmpty = messages.length === 0;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900">
+    <div className="w-full h-screen bg-slate-900 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-800 px-4 py-4 border-b border-slate-700 flex justify-between items-center">
-        <h1 className="text-xl font-bold text-white">AI Spiritual Mentor</h1>
-        <div className="flex gap-2">
+      <div className="bg-slate-800 px-4 py-3 sm:py-4 border-b border-slate-700 flex justify-between items-center flex-shrink-0">
+        <h1 className="text-lg sm:text-xl font-bold text-white truncate">
+          AI Spiritual Mentor
+        </h1>
+        <div className="flex gap-2 flex-shrink-0">
           <Button
             size="sm"
             variant="outline"
             onClick={handleNewChat}
-            className="bg-amber-600 hover:bg-amber-700 text-white border-0"
+            className="bg-amber-600 hover:bg-amber-700 text-white border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            New Chat
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline ml-1">New</span>
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={handleClearChat}
-            className="bg-red-600 hover:bg-red-700 text-white border-0"
+            className="bg-red-600 hover:bg-red-700 text-white border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm"
           >
-            <Trash2 className="w-4 h-4 mr-1" />
-            Clear
+            <Trash2 className="w-4 h-4" />
+            <span className="hidden sm:inline ml-1">Clear</span>
           </Button>
         </div>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto w-full bg-slate-900"
+      >
         {isEmpty ? (
-          <div className="h-full flex flex-col justify-center items-center text-center">
-            <p className="text-slate-400 text-lg mb-4">
+          <div className="h-full w-full flex flex-col justify-center items-center text-center px-4">
+            <p className="text-slate-400 text-base sm:text-lg mb-4">
               Welcome to your AI Spiritual Mentor
             </p>
-            <p className="text-slate-500 max-w-md">
+            <p className="text-slate-500 max-w-md text-sm sm:text-base">
               Ask me anything about faith, prayer, or spiritual growth. I'm here
               to help guide you on your spiritual journey.
             </p>
           </div>
         ) : (
-          <div>
+          <div className="w-full py-4">
             {messages.map((message) => (
               <MessageBubble key={message.id} message={message} />
             ))}
@@ -285,9 +291,9 @@ export default function SpiritualMentor() {
         )}
       </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="bg-slate-800 border-t border-slate-700 px-4 py-3">
-        <div className="flex gap-2 items-end">
+      {/* Input Area - Fixed at bottom with KeyboardAvoidingView */}
+      <div className="bg-slate-800 border-t border-slate-700 px-3 sm:px-4 py-3 flex-shrink-0 w-full">
+        <div className="flex gap-2 items-end w-full">
           <Input
             ref={inputRef}
             value={inputValue}
@@ -295,13 +301,13 @@ export default function SpiritualMentor() {
             onKeyDown={handleKeyDown}
             placeholder="Ask LightPath Mentor..."
             disabled={isSending}
-            className="flex-1 bg-slate-700 text-white placeholder-slate-500 border-slate-600 focus:border-amber-600 focus:ring-amber-600"
-            style={{ minHeight: "44px" }}
+            className="flex-1 bg-slate-700 text-white placeholder-slate-500 border-slate-600 focus:border-amber-600 focus:ring-amber-600 text-sm sm:text-base"
+            style={{ minHeight: "40px", maxHeight: "100px" }}
           />
           <Button
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isSending}
-            className="bg-amber-600 hover:bg-amber-700 text-white border-0 px-4 py-2"
+            className="bg-amber-600 hover:bg-amber-700 text-white border-0 px-3 sm:px-4 py-2 flex-shrink-0"
             size="sm"
           >
             {isSending ? (
