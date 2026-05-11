@@ -1,255 +1,310 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { Send, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
-import { Send, Loader2, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import ChatMessageItem from "@/components/ChatMessageItem";
-import TypingIndicator from "@/components/TypingIndicator";
 
 interface Message {
+  id: string;
   role: "user" | "assistant";
   content: string;
-  timestamp?: Date;
+  timestamp: Date;
 }
 
+// Memoized message bubble for performance
+const MessageBubble = memo(({ message }: { message: Message }) => {
+  const isUser = message.role === "user";
+
+  return (
+    <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
+      <div
+        className={`max-w-xs px-4 py-3 rounded-lg ${
+          isUser
+            ? "bg-amber-600 text-white rounded-br-none"
+            : "bg-slate-700 text-slate-100 rounded-bl-none"
+        }`}
+      >
+        <p className="text-base leading-relaxed whitespace-pre-wrap break-words">
+          {message.content}
+        </p>
+      </div>
+    </div>
+  );
+});
+
+MessageBubble.displayName = "MessageBubble";
+
+// Memoized typing indicator
+const TypingIndicator = memo(() => (
+  <div className="flex mb-4 justify-start">
+    <div className="bg-slate-700 px-4 py-3 rounded-lg rounded-bl-none">
+      <div className="flex gap-1">
+        <div className="w-2 h-2 bg-slate-400 rounded-full animate-pulse" />
+        <div
+          className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+          style={{ animationDelay: "0.2s" }}
+        />
+        <div
+          className="w-2 h-2 bg-slate-400 rounded-full animate-pulse"
+          style={{ animationDelay: "0.4s" }}
+        />
+      </div>
+    </div>
+  </div>
+));
+
+TypingIndicator.displayName = "TypingIndicator";
+
 export default function SpiritualMentor() {
-  const [inputValue, setInputValue] = useState("");
+  // State management
   const [messages, setMessages] = useState<Message[]>([]);
+  const [inputValue, setInputValue] = useState("");
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // tRPC mutations and queries
   const createSessionMutation = trpc.chat.createSession.useMutation();
   const getSessionsQuery = trpc.chat.getSessions.useQuery();
   const getMessagesQuery = trpc.chat.getMessages.useQuery(
     { sessionId: sessionId! },
     { enabled: !!sessionId }
   );
-  const chatMutation = trpc.chat.sendMessage.useMutation();
-  const clearChatMutation = trpc.chat.clearMessages.useMutation();
+  const sendMessageMutation = trpc.chat.sendMessage.useMutation();
+  const clearMessagesMutation = trpc.chat.clearMessages.useMutation();
 
-  // Initialize session on mount
+  // Initialize chat session on mount
   useEffect(() => {
     if (isInitialized) return;
 
-    const initializeSession = async () => {
+    const initializeChat = async () => {
       try {
         setIsLoading(true);
         const sessions = await getSessionsQuery.refetch();
 
         if (sessions.data && sessions.data.length > 0) {
-          // Use the first session (most recent)
           setSessionId(sessions.data[0].id);
         } else {
-          // Create a new session
-          const result = await createSessionMutation.mutateAsync({});
-          setSessionId(result.id);
+          const newSession = await createSessionMutation.mutateAsync({});
+          setSessionId(newSession.id);
         }
         setIsInitialized(true);
       } catch (error) {
-        toast.error("Failed to initialize chat session");
-        setIsInitialized(true);
+        console.error("Failed to initialize chat:", error);
+        toast.error("Failed to initialize chat");
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeSession();
+    initializeChat();
   }, [isInitialized, getSessionsQuery, createSessionMutation]);
 
   // Load messages when session changes
   useEffect(() => {
-    if (sessionId && isInitialized) {
-      const loadMessages = async () => {
-        try {
-          const result = await getMessagesQuery.refetch();
-          if (result.data) {
-            // Limit to last 50 messages for performance
-            const recentChats = result.data.slice(-50);
-            const formattedMessages: Message[] = recentChats.flatMap((chat: any) => [
-              {
-                role: "user" as const,
-                content: chat.userMessage,
-                timestamp: new Date(chat.createdAt),
-              },
-              {
-                role: "assistant" as const,
-                content: chat.assistantResponse,
-                timestamp: new Date(chat.createdAt),
-              },
-            ]);
-            setMessages(formattedMessages);
-          }
-        } catch (error) {
-          console.error("Failed to load messages:", error);
-        }
-      };
-      loadMessages();
+    if (sessionId && getMessagesQuery.data) {
+      const formattedMessages: Message[] = getMessagesQuery.data.map(
+        (msg: any, index: number) => ({
+          id: `${msg.id}-${index}`,
+          role: msg.role,
+          content: msg.content,
+          timestamp: new Date(),
+        })
+      );
+      setMessages(formattedMessages);
     }
-  }, [sessionId, isInitialized, getMessagesQuery]);
+  }, [sessionId, getMessagesQuery.data]);
 
-  // Auto-scroll to latest message with optimized timing
-  useEffect(() => {
-    const timer = requestAnimationFrame(() => {
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    });
-    return () => cancelAnimationFrame(timer);
-  }, [messages.length]);
+    }, 100);
+  }, []);
 
-  // Memoized send message handler with useCallback
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  // Handle sending a message
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || !sessionId || chatMutation.isPending) return;
+    if (!inputValue.trim() || !sessionId || isSending) return;
 
-    const userMessage = inputValue;
-    setInputValue(""); // Clear input immediately for responsive UI
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: inputValue,
+      timestamp: new Date(),
+    };
 
-    // Optimistically add user message
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: userMessage, timestamp: new Date() },
-    ]);
+    // Add user message to UI immediately
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsSending(true);
 
     try {
-      const response = await chatMutation.mutateAsync({
+      // Send message to backend
+      const response = await sendMessageMutation.mutateAsync({
         sessionId,
-        message: userMessage,
+        message: inputValue,
       });
-      
-      // Add assistant response
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: response.assistantResponse,
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      toast.error("Failed to get response from Spiritual Mentor");
-      // Remove the user message on error
-      setMessages((prev) => prev.slice(0, -1));
-    }
-  }, [inputValue, sessionId, chatMutation]);
 
-  // Memoized new chat handler
+      // Add AI response to UI
+      const aiMessage: Message = {
+        id: `ai-${Date.now()}`,
+        role: "assistant",
+        content: response.assistantResponse || "I'm here to help with your spiritual journey.",
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+      scrollToBottom();
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message. Please try again.");
+      // Remove the user message if sending failed
+      setMessages((prev) =>
+        prev.filter((msg) => msg.id !== userMessage.id)
+      );
+      setInputValue(userMessage.content);
+    } finally {
+      setIsSending(false);
+      inputRef.current?.focus();
+    }
+  }, [inputValue, sessionId, isSending, sendMessageMutation, scrollToBottom]);
+
+  // Handle creating a new chat
   const handleNewChat = useCallback(async () => {
     try {
       setIsLoading(true);
+      const newSession = await createSessionMutation.mutateAsync({});
+      setSessionId(newSession.id);
       setMessages([]);
       setInputValue("");
-      
-      const result = await createSessionMutation.mutateAsync({});
-      setSessionId(result.id);
       toast.success("New chat started");
     } catch (error) {
+      console.error("Failed to create new chat:", error);
       toast.error("Failed to create new chat");
     } finally {
       setIsLoading(false);
     }
   }, [createSessionMutation]);
 
-  // Memoized clear chat handler
+  // Handle clearing chat
   const handleClearChat = useCallback(async () => {
-    if (!sessionId) return;
+    if (!window.confirm("Are you sure you want to clear all messages?")) return;
 
     try {
-      await clearChatMutation.mutateAsync({ sessionId });
-      setMessages([]);
-      toast.success("Chat cleared");
+      if (sessionId) {
+        await clearMessagesMutation.mutateAsync({ sessionId });
+        setMessages([]);
+        toast.success("Chat cleared");
+      }
     } catch (error) {
+      console.error("Failed to clear chat:", error);
       toast.error("Failed to clear chat");
     }
-  }, [sessionId, clearChatMutation]);
+  }, [sessionId, clearMessagesMutation]);
 
+  // Handle keyboard shortcut (Enter to send)
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
+
+  // Render loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex-1 bg-slate-900 flex justify-center items-center min-h-screen">
+        <Loader2 className="w-8 h-8 text-amber-600 animate-spin" />
       </div>
     );
   }
 
+  // Render empty state
+  const isEmpty = messages.length === 0;
+
   return (
-    <div className="min-h-screen bg-background flex flex-col pb-24">
+    <div className="flex flex-col h-screen bg-slate-900">
       {/* Header */}
-      <header className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-4 shadow-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Spiritual Mentor</h1>
-            <p className="text-xs sm:text-sm text-primary-foreground/80">AI-powered spiritual guidance</p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleNewChat}
-              className="text-primary-foreground hover:bg-primary-foreground/20"
-            >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearChat}
-              className="text-primary-foreground hover:bg-primary-foreground/20"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+      <div className="bg-slate-800 px-4 py-4 border-b border-slate-700 flex justify-between items-center">
+        <h1 className="text-xl font-bold text-white">AI Spiritual Mentor</h1>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleNewChat}
+            className="bg-amber-600 hover:bg-amber-700 text-white border-0"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New Chat
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleClearChat}
+            className="bg-red-600 hover:bg-red-700 text-white border-0"
+          >
+            <Trash2 className="w-4 h-4 mr-1" />
+            Clear
+          </Button>
         </div>
-      </header>
+      </div>
 
       {/* Messages Container */}
-      <main
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto max-w-4xl mx-auto w-full p-4 space-y-4"
-      >
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full min-h-96 text-center">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Welcome to Your Spiritual Mentor
-              </h2>
-              <p className="text-muted-foreground">
-                Ask questions about faith, spirituality, or any topic you'd like guidance on.
-              </p>
-            </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {isEmpty ? (
+          <div className="h-full flex flex-col justify-center items-center text-center">
+            <p className="text-slate-400 text-lg mb-4">
+              Welcome to your AI Spiritual Mentor
+            </p>
+            <p className="text-slate-500 max-w-md">
+              Ask me anything about faith, prayer, or spiritual growth. I'm here
+              to help guide you on your spiritual journey.
+            </p>
           </div>
         ) : (
-          messages.map((msg, idx) => (
-            <ChatMessageItem key={idx} message={msg} index={idx} />
-          ))
+          <div>
+            {messages.map((message) => (
+              <MessageBubble key={message.id} message={message} />
+            ))}
+            {isSending && <TypingIndicator />}
+            <div ref={messagesEndRef} />
+          </div>
         )}
-        {chatMutation.isPending && <TypingIndicator />}
-        <div ref={messagesEndRef} />
-      </main>
+      </div>
 
-      {/* Input Area */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex gap-2">
-          <input
-            type="text"
+      {/* Input Area - Fixed at bottom */}
+      <div className="bg-slate-800 border-t border-slate-700 px-4 py-3">
+        <div className="flex gap-2 items-end">
+          <Input
+            ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-            placeholder="Ask your spiritual mentor..."
-            className="flex-1 px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-            disabled={chatMutation.isPending}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask LightPath Mentor..."
+            disabled={isSending}
+            className="flex-1 bg-slate-700 text-white placeholder-slate-500 border-slate-600 focus:border-amber-600 focus:ring-amber-600"
+            style={{ minHeight: "44px" }}
           />
           <Button
             onClick={handleSendMessage}
-            disabled={!inputValue.trim() || chatMutation.isPending}
-            className="gap-2"
+            disabled={!inputValue.trim() || isSending}
+            className="bg-amber-600 hover:bg-amber-700 text-white border-0 px-4 py-2"
+            size="sm"
           >
-            {chatMutation.isPending ? (
+            {isSending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Send className="w-4 h-4" />
