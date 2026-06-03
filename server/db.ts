@@ -1,9 +1,9 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
   devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses,
-  chatSessions, feedbacks, InsertFeedback, passwordResetTokens
+  chatSessions, feedbacks, InsertFeedback, passwordResetTokens, dreams, Dream, InsertDream
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -48,6 +48,59 @@ export async function getUserByEmail(email: string) {
   
   const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
   return result.length > 0 ? result[0] : null;
+}
+
+// Dreams Interpreter
+export async function createDream(userId: number, dreamContent: string, mood?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(dreams).values({
+    userId,
+    dreamContent,
+    mood,
+    isSaved: false,
+  });
+  return result;
+}
+
+export async function updateDreamInterpretation(dreamId: number, interpretation: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.update(dreams)
+    .set({ interpretation, updatedAt: new Date() })
+    .where(eq(dreams.id, dreamId));
+  return result;
+}
+
+export async function getDreamsByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select()
+    .from(dreams)
+    .where(eq(dreams.userId, userId))
+    .orderBy(desc(dreams.createdAt));
+  return result;
+}
+
+export async function saveDream(dreamId: number, isSaved: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.update(dreams)
+    .set({ isSaved, updatedAt: new Date() })
+    .where(eq(dreams.id, dreamId));
+  return result;
+}
+
+export async function deleteDream(dreamId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.delete(dreams).where(eq(dreams.id, dreamId));
+  return result;
 }
 
 export async function getUserById(userId: number) {

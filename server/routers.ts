@@ -12,7 +12,8 @@ import {
   createChatSession, getUserChatSessions, getActiveChatSession, getSessionMessages, saveAIChat, clearSessionMessages, getUserAIChatHistory, getSessionById,
   getDailyVerse,
   submitFeedback, getAllFeedback, getUserFeedback,
-  getUserByEmail
+  getUserByEmail,
+  createDream, updateDreamInterpretation, getDreamsByUserId, saveDream, deleteDream
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendFeedbackEmail } from "./_core/emailService";
@@ -355,6 +356,64 @@ export const appRouter = router({
       return getUserFeedback(ctx.user.id);
     }),
   }),
-});
+  dreams: router({
+    submit: protectedProcedure
+      .input(z.object({
+        dreamContent: z.string().min(10, "Dream content must be at least 10 characters"),
+        mood: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Create dream entry
+        const dreamResult = await createDream(ctx.user.id, input.dreamContent, input.mood);
+        const dreamId = Number((dreamResult as any).insertId || (dreamResult as any).lastInsertRowid);
 
+        // Generate AI interpretation
+        try {
+          const response = await invokeLLM({
+            messages: [
+              {
+                role: "system",
+                content: "You are a spiritual dream interpreter. Provide thoughtful, biblical interpretations of dreams with references to spiritual themes and biblical wisdom. Keep responses concise but meaningful.",
+              },
+              {
+                role: "user",
+                content: `Please interpret this dream from a spiritual perspective:\n\nDream: ${input.dreamContent}${input.mood ? `\nMood: ${input.mood}` : ""}`,
+              },
+            ],
+          });
+
+          const content = response.choices[0]?.message?.content;
+          const interpretation = typeof content === 'string' ? content : "Unable to generate interpretation";
+          if (dreamId) {
+            await updateDreamInterpretation(dreamId, interpretation);
+          }
+
+          return { dreamId: dreamId || 0, interpretation };
+        } catch (error) {
+          console.error("Failed to generate dream interpretation:", error);
+          return { dreamId, interpretation: "Interpretation pending..." };
+        }
+      }),
+    getHistory: protectedProcedure.query(async ({ ctx }) => {
+      return getDreamsByUserId(ctx.user.id);
+    }),
+    save: protectedProcedure
+      .input(z.object({
+        dreamId: z.number(),
+        isSaved: z.boolean(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await saveDream(input.dreamId, input.isSaved);
+        return { success: true };
+      }),
+    delete: protectedProcedure
+      .input(z.object({
+        dreamId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await deleteDream(input.dreamId);
+        return { success: true };
+      }),
+  }),
+});
 export type AppRouter = typeof appRouter;

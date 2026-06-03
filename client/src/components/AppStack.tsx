@@ -10,6 +10,7 @@ import About from "@/pages/About";
 import AboutDeveloper from "@/pages/AboutDeveloper";
 import Dedication from "@/pages/Dedication";
 import Feedback from "@/pages/Feedback";
+import DreamsInterpreter from "@/pages/DreamsInterpreter";
 import NotFound from "@/pages/NotFound";
 import BottomNavigation from "./BottomNavigation";
 
@@ -35,6 +36,7 @@ export default function AppStack() {
           <Route path="/about-developer" component={AboutDeveloper} />
           <Route path="/dedication" component={Dedication} />
           <Route path="/feedback" component={Feedback} />
+          <Route path="/dreams" component={DreamsInterpreter} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>

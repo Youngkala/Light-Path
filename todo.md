@@ -381,3 +381,18 @@
 - [x] Tested on various screen sizes
 - [x] All 39 tests passing
 - [x] Mobile layout now matches professional chat apps
+
+
+## Phase 24: Dreams Interpreter Feature
+- [ ] Create dreams table in database schema with dream content, interpretation, and metadata
+- [ ] Add tRPC endpoints for dream submission, retrieval, and interpretation
+- [ ] Build Dreams Interpreter UI screen with dream input form
+- [ ] Implement AI-powered dream interpretation using LLM
+- [ ] Create dream history list showing past interpretations
+- [ ] Add ability to save favorite dream interpretations
+- [ ] Add Dreams Interpreter to bottom navigation
+- [ ] Optimize for mobile responsiveness
+- [ ] Test dream submission and interpretation flow
+- [ ] Test dream history retrieval
+- [ ] Verify AI interpretation quality and biblical references
+- [ ] Final checkpoint with Dreams Interpreter feature

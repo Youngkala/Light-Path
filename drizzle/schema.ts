@@ -201,6 +201,23 @@ export type Feedback = typeof feedbacks.$inferSelect;
 export type InsertFeedback = typeof feedbacks.$inferInsert;
 
 /**
+ * Dreams Interpreter - Store user dreams and their spiritual interpretations
+ */
+export const dreams = mysqlTable("dreams", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  dreamContent: text("dreamContent").notNull(),
+  interpretation: text("interpretation"),
+  mood: varchar("mood", { length: 64 }),
+  isSaved: boolean("isSaved").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Dream = typeof dreams.$inferSelect;
+export type InsertDream = typeof dreams.$inferInsert;
+
+/**
  * Relations for foreign keys
  */
 export const chatSessionsRelations = relations(chatSessions, ({ many }) => ({
