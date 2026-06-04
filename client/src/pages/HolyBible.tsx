@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +32,13 @@ export function HolyBible() {
   const bookmarksQuery = trpc.bible.getBookmarks.useQuery();
   const userBookmarks = bookmarksQuery.data || [];
 
+  // Initialize bookmark mutations at top level
+  const bookmarkVerseMutation = trpc.bible.bookmarkVerse.useMutation();
+  const removeBookmarkMutation = trpc.bible.removeBookmark.useMutation();
+  const markChapterReadMutation = trpc.bible.markChapterRead.useMutation();
+
   // Initialize bookmarks from user data
-  useMemo(() => {
+  useEffect(() => {
     const bookmarkIds = new Set(userBookmarks.map((b: any) => b.verseId));
     setBookmarks(bookmarkIds);
   }, [userBookmarks]);
@@ -61,14 +66,14 @@ export function HolyBible() {
 
   const handleBookmarkVerse = async (verseId: number) => {
     if (bookmarks.has(verseId)) {
-      await trpc.bible.removeBookmark.useMutation().mutateAsync({ verseId });
+      await removeBookmarkMutation.mutateAsync({ verseId });
       setBookmarks((prev) => {
         const newSet = new Set(prev);
         newSet.delete(verseId);
         return newSet;
       });
     } else {
-      await trpc.bible.bookmarkVerse.useMutation().mutateAsync({ verseId });
+      await bookmarkVerseMutation.mutateAsync({ verseId });
       setBookmarks((prev) => {
         const newSet = new Set(prev);
         newSet.add(verseId);
@@ -79,7 +84,7 @@ export function HolyBible() {
 
   const handleMarkChapterRead = async () => {
     if (selectedBook) {
-      await trpc.bible.markChapterRead.useMutation().mutateAsync({
+      await markChapterReadMutation.mutateAsync({
         bookId: selectedBook.id,
         chapter: selectedChapter,
       });
