@@ -43,6 +43,13 @@
       "when": 1780504327531,
       "tag": "0005_wide_khan",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1780580069703,
+      "tag": "0006_handy_kid_colt",
+      "breakpoints": true
     }
   ]
 }

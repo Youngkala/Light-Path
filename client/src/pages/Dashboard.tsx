@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, BookOpen, Zap, Settings, LogOut, Flame, Moon } from "lucide-react";
+import { Heart, BookOpen, Zap, Settings, LogOut, Flame, Moon, Book } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
@@ -130,6 +130,15 @@ export default function Dashboard() {
             >
               <Moon className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-500" />
               <span className="text-xs sm:text-sm font-semibold text-center">Dreams</span>
+            </Button>
+
+            <Button
+              onClick={() => setLocation("/holy-bible")}
+              className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
+              variant="outline"
+            >
+              <Book className="w-6 h-6 sm:w-7 sm:h-7 text-amber-600" />
+              <span className="text-xs sm:text-sm font-semibold text-center">Holy Bible</span>
             </Button>
           </div>
         </div>

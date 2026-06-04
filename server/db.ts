@@ -3,7 +3,9 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, prayers, InsertPrayer, habits, habitLogs, 
   devotionals, devotionalBookmarks, bibleChapters, aiChats, dailyVerses,
-  chatSessions, feedbacks, InsertFeedback, passwordResetTokens, dreams, Dream, InsertDream
+  chatSessions, feedbacks, InsertFeedback, passwordResetTokens, dreams, Dream, InsertDream,
+  bibleBooks, BibleBook, InsertBibleBook, bibleVerses, BibleVerse, InsertBibleVerse,
+  bibleBookmarks, BibleBookmark, InsertBibleBookmark, bibleReadingProgress, InsertBibleReadingProgress
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -499,4 +501,92 @@ export async function getFeedbackByType(feedbackType: "review" | "complaint" | "
   const db = await getDb();
   if (!db) return [];
   return db.select().from(feedbacks).where(eq(feedbacks.feedbackType, feedbackType)).orderBy(feedbacks.createdAt);
+}
+
+// Bible queries
+export async function getAllBibleBooks() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleBooks).orderBy(bibleBooks.bookNumber);
+}
+
+export async function getBibleBook(bookId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(bibleBooks).where(eq(bibleBooks.id, bookId)).limit(1);
+  return result[0] || null;
+}
+
+export async function getBibleBookByName(bookName: string) {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(bibleBooks).where(eq(bibleBooks.bookName, bookName)).limit(1);
+  return result[0] || null;
+}
+
+export async function getBibleVerses(bookId: number, chapter: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleVerses)
+    .where(and(eq(bibleVerses.bookId, bookId), eq(bibleVerses.chapter, chapter)))
+    .orderBy(bibleVerses.verse);
+}
+
+export async function insertBibleBooks(books: InsertBibleBook[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(bibleBooks).values(books);
+}
+
+export async function insertBibleVerses(verses: InsertBibleVerse[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(bibleVerses).values(verses);
+}
+
+export async function bookmarkBibleVerse(userId: number, verseId: number, notes?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(bibleBookmarks).values({ userId, verseId, notes });
+}
+
+export async function removeBookmarkBibleVerse(userId: number, verseId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.delete(bibleBookmarks)
+    .where(and(eq(bibleBookmarks.userId, userId), eq(bibleBookmarks.verseId, verseId)));
+}
+
+export async function getUserBibleBookmarks(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleBookmarks).where(eq(bibleBookmarks.userId, userId)).orderBy(bibleBookmarks.createdAt);
+}
+
+export async function markChapterAsRead(userId: number, bookId: number, chapter: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db.select().from(bibleReadingProgress)
+    .where(and(eq(bibleReadingProgress.userId, userId), eq(bibleReadingProgress.bookId, bookId), eq(bibleReadingProgress.chapter, chapter)))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    return db.update(bibleReadingProgress)
+      .set({ isRead: true, lastReadAt: new Date() })
+      .where(eq(bibleReadingProgress.id, existing[0].id));
+  }
+  return db.insert(bibleReadingProgress).values({ userId, bookId, chapter, isRead: true, lastReadAt: new Date() });
+}
+
+export async function getUserBibleReadingProgress(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleReadingProgress).where(eq(bibleReadingProgress.userId, userId));
+}
+
+export async function getBookReadingProgress(userId: number, bookId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bibleReadingProgress)
+    .where(and(eq(bibleReadingProgress.userId, userId), eq(bibleReadingProgress.bookId, bookId)));
 }

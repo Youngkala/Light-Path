@@ -218,6 +218,65 @@ export type Dream = typeof dreams.$inferSelect;
 export type InsertDream = typeof dreams.$inferInsert;
 
 /**
+ * Holy Bible - Complete Bible text with all books, chapters, and verses
+ */
+export const bibleBooks = mysqlTable("bibleBooks", {
+  id: int("id").autoincrement().primaryKey(),
+  bookNumber: int("bookNumber").notNull().unique(),
+  bookName: varchar("bookName", { length: 64 }).notNull().unique(),
+  testament: mysqlEnum("testament", ["Old Testament", "New Testament"]).notNull(),
+  abbreviation: varchar("abbreviation", { length: 10 }).notNull(),
+  chapterCount: int("chapterCount").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BibleBook = typeof bibleBooks.$inferSelect;
+export type InsertBibleBook = typeof bibleBooks.$inferInsert;
+
+export const bibleVerses = mysqlTable("bibleVerses", {
+  id: int("id").autoincrement().primaryKey(),
+  bookId: int("bookId").notNull(),
+  chapter: int("chapter").notNull(),
+  verse: int("verse").notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BibleVerse = typeof bibleVerses.$inferSelect;
+export type InsertBibleVerse = typeof bibleVerses.$inferInsert;
+
+/**
+ * Bible Bookmarks - User's favorite verses
+ */
+export const bibleBookmarks = mysqlTable("bibleBookmarks", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  verseId: int("verseId").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BibleBookmark = typeof bibleBookmarks.$inferSelect;
+export type InsertBibleBookmark = typeof bibleBookmarks.$inferInsert;
+
+/**
+ * Bible Reading Progress - Track which chapters user has read
+ */
+export const bibleReadingProgress = mysqlTable("bibleReadingProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  bookId: int("bookId").notNull(),
+  chapter: int("chapter").notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  lastReadAt: timestamp("lastReadAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BibleReadingProgress = typeof bibleReadingProgress.$inferSelect;
+export type InsertBibleReadingProgress = typeof bibleReadingProgress.$inferInsert;
+
+/**
  * Relations for foreign keys
  */
 export const chatSessionsRelations = relations(chatSessions, ({ many }) => ({
@@ -268,5 +327,34 @@ export const bibleChaptersRelations = relations(bibleChapters, ({ one }) => ({
   user: one(users, {
     fields: [bibleChapters.userId],
     references: [users.id],
+  }),
+}));
+
+export const bibleVersesRelations = relations(bibleVerses, ({ one }) => ({
+  book: one(bibleBooks, {
+    fields: [bibleVerses.bookId],
+    references: [bibleBooks.id],
+  }),
+}));
+
+export const bibleBookmarksRelations = relations(bibleBookmarks, ({ one }) => ({
+  user: one(users, {
+    fields: [bibleBookmarks.userId],
+    references: [users.id],
+  }),
+  verse: one(bibleVerses, {
+    fields: [bibleBookmarks.verseId],
+    references: [bibleVerses.id],
+  }),
+}));
+
+export const bibleReadingProgressRelations = relations(bibleReadingProgress, ({ one }) => ({
+  user: one(users, {
+    fields: [bibleReadingProgress.userId],
+    references: [users.id],
+  }),
+  book: one(bibleBooks, {
+    fields: [bibleReadingProgress.bookId],
+    references: [bibleBooks.id],
   }),
 }));

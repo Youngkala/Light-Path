@@ -13,7 +13,8 @@ import {
   getDailyVerse,
   submitFeedback, getAllFeedback, getUserFeedback,
   getUserByEmail,
-  createDream, updateDreamInterpretation, getDreamsByUserId, saveDream, deleteDream
+  createDream, updateDreamInterpretation, getDreamsByUserId, saveDream, deleteDream,
+  getAllBibleBooks, getBibleBook, getBibleVerses, getUserBibleBookmarks, bookmarkBibleVerse, removeBookmarkBibleVerse, markChapterAsRead, getUserBibleReadingProgress
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendFeedbackEmail } from "./_core/emailService";
@@ -414,6 +415,58 @@ export const appRouter = router({
         await deleteDream(input.dreamId);
         return { success: true };
       }),
+  }),
+  bible: router({
+    getBooks: publicProcedure.query(async () => {
+      return getAllBibleBooks();
+    }),
+    getBook: publicProcedure
+      .input(z.object({
+        bookId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return getBibleBook(input.bookId);
+      }),
+    getChapter: publicProcedure
+      .input(z.object({
+        bookId: z.number(),
+        chapter: z.number(),
+      }))
+      .query(async ({ input }) => {
+        return getBibleVerses(input.bookId, input.chapter);
+      }),
+    getBookmarks: protectedProcedure.query(async ({ ctx }) => {
+      return getUserBibleBookmarks(ctx.user.id);
+    }),
+    bookmarkVerse: protectedProcedure
+      .input(z.object({
+        verseId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await bookmarkBibleVerse(ctx.user.id, input.verseId, input.notes);
+        return { success: true };
+      }),
+    removeBookmark: protectedProcedure
+      .input(z.object({
+        verseId: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await removeBookmarkBibleVerse(ctx.user.id, input.verseId);
+        return { success: true };
+      }),
+    markChapterRead: protectedProcedure
+      .input(z.object({
+        bookId: z.number(),
+        chapter: z.number(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await markChapterAsRead(ctx.user.id, input.bookId, input.chapter);
+        return { success: true };
+      }),
+    getReadingProgress: protectedProcedure.query(async ({ ctx }) => {
+      return getUserBibleReadingProgress(ctx.user.id);
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;
