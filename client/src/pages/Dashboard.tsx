@@ -2,12 +2,14 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, BookOpen, Zap, Settings, LogOut, Flame, Moon, Book } from "lucide-react";
+import { Heart, BookOpen, Zap, Settings, LogOut, Flame, Moon, Book, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { trpc } from "@/lib/trpc";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const [, setLocation] = useLocation();
+  const [showMoreFeatures, setShowMoreFeatures] = useState(false);
   const { data: dailyVerse } = trpc.dailyVerse.get.useQuery();
   const { data: habits } = trpc.habits.list.useQuery();
   const { data: prayers } = trpc.prayers.list.useQuery();
@@ -86,6 +88,8 @@ export default function Dashboard() {
         {/* Quick Access Cards */}
         <div className="space-y-2 sm:space-y-3">
           <p className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wider">Quick Access</p>
+          
+          {/* Primary Quick Access (Always Visible) */}
           <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <Button
               onClick={() => setLocation("/prayer")}
@@ -115,24 +119,6 @@ export default function Dashboard() {
             </Button>
 
             <Button
-              onClick={() => setLocation("/mentor")}
-              className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
-              variant="outline"
-            >
-              <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
-              <span className="text-xs sm:text-sm font-semibold text-center">Mentor</span>
-            </Button>
-
-            <Button
-              onClick={() => setLocation("/dreams")}
-              className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
-              variant="outline"
-            >
-              <Moon className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-500" />
-              <span className="text-xs sm:text-sm font-semibold text-center">Dreams</span>
-            </Button>
-
-            <Button
               onClick={() => setLocation("/holy-bible")}
               className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
               variant="outline"
@@ -141,6 +127,39 @@ export default function Dashboard() {
               <span className="text-xs sm:text-sm font-semibold text-center">Holy Bible</span>
             </Button>
           </div>
+
+          {/* More Features Toggle */}
+          <Button
+            onClick={() => setShowMoreFeatures(!showMoreFeatures)}
+            variant="outline"
+            className="w-full h-10 flex items-center justify-center gap-2 border-dashed border-border text-muted-foreground hover:text-foreground hover:border-accent/50"
+          >
+            <span className="text-sm font-medium">{showMoreFeatures ? "Hide" : "Show"} More Features</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showMoreFeatures ? "rotate-180" : ""}`} />
+          </Button>
+
+          {/* Additional Features (Collapsible) */}
+          {showMoreFeatures && (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-2 border-t border-border">
+              <Button
+                onClick={() => setLocation("/mentor")}
+                className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
+                variant="outline"
+              >
+                <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-purple-500" />
+                <span className="text-xs sm:text-sm font-semibold text-center">Mentor</span>
+              </Button>
+
+              <Button
+                onClick={() => setLocation("/dreams")}
+                className="h-20 sm:h-24 flex flex-col items-center justify-center gap-2 bg-card border-2 border-border hover:border-accent/50 text-foreground hover:bg-accent/5 transition-all"
+                variant="outline"
+              >
+                <Moon className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-500" />
+                <span className="text-xs sm:text-sm font-semibold text-center">Dreams</span>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Encouragement */}
