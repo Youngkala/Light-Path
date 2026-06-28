@@ -12,12 +12,13 @@ import Dedication from "@/pages/Dedication";
 import Feedback from "@/pages/Feedback";
 import DreamsInterpreter from "@/pages/DreamsInterpreter";
 import { HolyBible } from "@/pages/HolyBible";
+import Search from "@/pages/Search";
 import NotFound from "@/pages/NotFound";
 import BottomNavigation from "./BottomNavigation";
 
 /**
  * AppStack - Navigation for authenticated users
- * Contains: Dashboard, Prayer, Habits, Devotionals, Bible, Mentor, Settings, etc.
+ * Contains: Dashboard, Prayer, Habits, Devotionals, Bible, Mentor, Settings, Search, etc.
  */
 export default function AppStack() {
   return (
@@ -39,6 +40,7 @@ export default function AppStack() {
           <Route path="/feedback" component={Feedback} />
           <Route path="/dreams" component={DreamsInterpreter} />
           <Route path="/holy-bible" component={HolyBible} />
+          <Route path="/search" component={Search} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>

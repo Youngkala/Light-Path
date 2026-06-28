@@ -14,7 +14,7 @@ import {
   submitFeedback, getAllFeedback, getUserFeedback,
   getUserByEmail,
   createDream, updateDreamInterpretation, getDreamsByUserId, saveDream, deleteDream,
-  getAllBibleBooks, getBibleBook, getBibleVerses, getUserBibleBookmarks, bookmarkBibleVerse, removeBookmarkBibleVerse, markChapterAsRead, getUserBibleReadingProgress
+  getAllBibleBooks, getBibleBook, getBibleVerses, getUserBibleBookmarks, bookmarkBibleVerse, removeBookmarkBibleVerse, markChapterAsRead, getUserBibleReadingProgress, globalSearch
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { sendFeedbackEmail } from "./_core/emailService";
@@ -467,6 +467,15 @@ export const appRouter = router({
     getReadingProgress: protectedProcedure.query(async ({ ctx }) => {
       return getUserBibleReadingProgress(ctx.user.id);
     }),
+  }),
+  search: router({
+    global: protectedProcedure
+      .input(z.object({
+        query: z.string().min(1, "Search query required"),
+      }))
+      .query(async ({ input, ctx }) => {
+        return globalSearch(ctx.user.id, input.query);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

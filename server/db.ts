@@ -590,3 +590,59 @@ export async function getBookReadingProgress(userId: number, bookId: number) {
   return db.select().from(bibleReadingProgress)
     .where(and(eq(bibleReadingProgress.userId, userId), eq(bibleReadingProgress.bookId, bookId)));
 }
+
+
+
+// Global Search queries - Search across prayers, Bible verses, and devotionals
+export async function globalSearch(userId: number, query: string) {
+  const db = await getDb();
+  if (!db) return { prayers: [], bibleVerses: [], devotionals: [] };
+  
+  try {
+    // Search prayers by content
+    const userPrayers = await db.select()
+      .from(prayers)
+      .where(eq(prayers.userId, userId))
+      .limit(100);
+    
+    const filteredPrayers = userPrayers.filter(p => 
+      p.content.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10);
+    
+    // Search devotionals by title and content
+    const allDevotionals = await db.select()
+      .from(devotionals)
+      .limit(100);
+    
+    const filteredDevotionals = allDevotionals.filter(d => 
+      d.title.toLowerCase().includes(query.toLowerCase()) || 
+      d.content.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10);
+    
+    // Search Bible verses by text
+    const allVerses = await db.select({
+      id: bibleVerses.id,
+      bookId: bibleVerses.bookId,
+      chapter: bibleVerses.chapter,
+      verse: bibleVerses.verse,
+      text: bibleVerses.text,
+      bookName: bibleBooks.bookName,
+    })
+      .from(bibleVerses)
+      .innerJoin(bibleBooks, eq(bibleVerses.bookId, bibleBooks.id))
+      .limit(100);
+    
+    const filteredBibleVerses = allVerses.filter(v => 
+      v.text.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 10);
+    
+    return {
+      prayers: filteredPrayers,
+      bibleVerses: filteredBibleVerses,
+      devotionals: filteredDevotionals,
+    };
+  } catch (error) {
+    console.error("Global search error:", error);
+    return { prayers: [], bibleVerses: [], devotionals: [] };
+  }
+}

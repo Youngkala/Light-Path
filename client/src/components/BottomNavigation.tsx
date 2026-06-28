@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Home, Heart, MessageCircle, Settings, Book } from "lucide-react";
+import { Home, Heart, MessageCircle, Settings, Book, Search } from "lucide-react";
 
 export default function BottomNavigation() {
   const [location, setLocation] = useLocation();
@@ -7,6 +7,7 @@ export default function BottomNavigation() {
   const navItems = [
     { path: "/dashboard", label: "Home", icon: Home },
     { path: "/prayers", label: "Prayer", icon: Heart },
+    { path: "/search", label: "Search", icon: Search },
     { path: "/holy-bible", label: "Bible", icon: Book },
     { path: "/mentor", label: "Mentor", icon: MessageCircle },
     { path: "/settings", label: "Settings", icon: Settings },
